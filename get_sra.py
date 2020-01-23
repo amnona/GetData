@@ -19,7 +19,7 @@ __version__ = "1.2"
 
 
 def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outdir='fasta', skip_wgs=True):
-	'''Get all the samples from the SRA. Using the Metadata (runinfo) table SraRunTable.txt from the run browser
+	'''Get all the samples from the SRA. Using the Metadata (runinfo metadata) table SraRunTable.txt from the run browser
 
 	Parameters
 	----------

@@ -69,6 +69,11 @@ def test_fasta_file(files, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGG
 	primer_name: str or None
 		the name of the primer region identified
 	'''
+	if min_primer_len is not None:
+		new_primers = {}
+		for k, v in primers.items():
+			new_primers[k[-min_primer_len:]] = v
+		primers = new_primers
 	all_matches = defaultdict(float)
 	for cfile in files:
 		matches = defaultdict(int)
