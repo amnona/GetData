@@ -199,7 +199,7 @@ def test_kmer_head_region(files, kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 
 	return None
 
 
-def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_get=False, seq_len=150):
+def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_get=False, seq_len=150, skip_16s_check=False):
 	'''download the Sra table, convert to known region, and deblur
 
 	Parameters
@@ -210,11 +210,17 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 		name of the output fasta directory for the sra download
 	max_test: int, optional
 		maximal number of files to check for primer/region
+	skip_get: bool, optional
+		True to skip the SRA downloading step (assumes fasta files are in the fasta/ dir)
+	seq_len: int, optional
+		the length to trim each sequence after primer removal (actual length is min(seq_len, actual length))
+	skip_16s_check: bool, optional
+		True to skip the validation step that the sample is not WGS before downloading
 	'''
 	# get all the fasta files
 	if not skip_get:
 		print('processing sratable %s' % infile)
-		num_files = get_sra.GetSRA(infile, sra_path, skipifthere=True, outdir=fasta_dir)
+		num_files = get_sra.GetSRA(infile, sra_path, skipifthere=True, outdir=fasta_dir, skip_16s_check=skip_16s_check)
 		print('downloaded %d files' % num_files)
 	else:
 		print('skipping getting files from sra')
@@ -264,10 +270,12 @@ def main(argv):
 	parser = argparse.ArgumentParser(description='Process experiment version ' + __version__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument('-i', '--input', help='name of input SraRunTable file (with the sample accessions')
 	parser.add_argument('-p', '--sra-path', help='path to the sratoolkit binary', default='/home/amam7564/bin/sratoolkit.2.8.0-centos_linux64/bin/')
+	parser.add_argument('-t', '--trim-length', help='length to trim seqs after primer removal', default=150, type=int)
+	parser.add_argument('--skip-16s-check', help='download also samples that seem to be non-16s', action='store_true')
 	parser.add_argument('--skip-get', help='if set, skip getting the fasta files from SRA', action='store_true')
 
 	args = parser.parse_args(argv)
-	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get)
+	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check)
 
 
 if __name__ == "__main__":

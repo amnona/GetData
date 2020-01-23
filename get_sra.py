@@ -18,7 +18,7 @@ import subprocess
 __version__ = "1.2"
 
 
-def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outdir='fasta', skip_wgs=True):
+def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outdir='fasta', skip_16s_check=True):
 	'''Get all the samples from the SRA. Using the Metadata (runinfo metadata) table SraRunTable.txt from the run browser
 
 	Parameters
@@ -35,7 +35,7 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
 		delimiter for the table. If none, autodetect
 	outdir: str, optional
 		name of the output directory for the downloads
-	skip_wgs: bool, optional
+	skip_16s_check: bool, optional
 		if True, try to identify which samples are WGS and not 16s (>500M reads, not PCR/AMPLICON) and ignore them
 
 	Returns
@@ -73,12 +73,13 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
 			if cline['Assay_Type'] != 'AMPLICON':
 				suspicious = True
 
-		if suspicious:
-			if 'MBases' in cline:
-				if int(cline['MBases']) > 500:
-					print("skipping sample %s since it seems not 16S")
-					num_skipped += 1
-					continue
+		if not skip_16s_check:
+			if suspicious:
+				if 'MBases' in cline:
+					if int(cline['MBases']) > 500:
+						print("skipping sample %s since it seems not 16S")
+						num_skipped += 1
+						continue
 
 		if skipifthere:
 			if os.path.isfile(os.path.join(outdir, csamp) + '.fasta'):
