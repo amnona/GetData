@@ -51,7 +51,7 @@ def rev_comp_fasta(infile, outdir, reverse=True, complement=True):
 	outfile = os.path.join(outdir, os.path.basename(infile))
 	logging.debug('revcomp file %s into %s' % (infile, outfile))
 	with open(outfile, 'w') as ofl:
-		for cseq, chead in infile.iterfastaseqs(infile):
+		for cseq, chead in iterfastaseqs(infile):
 			if complement:
 				cseq = cseq.lower()
 				cseq = cseq.replace('a', 'T')
@@ -147,10 +147,12 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 	return None, None
 
 
-def test_read_length(files, num_reads=1000, prctile=75):
+def test_read_length(files, base_dir=None, num_reads=1000, prctile=75):
 	'''get the typical read length for files
 	Parameters
 	----------
+	base_dir: str or None, optional
+		the directory where the files reside, or None to assume exact (full path) file names in files
 	files: list of str
 		the fasta files to test
 	num_reads: int, optional
@@ -163,6 +165,8 @@ def test_read_length(files, num_reads=1000, prctile=75):
 	read_length: int
 		the read length
 	'''
+	if base_dir is not None:
+		files = [os.path.join(base_dir, x) for x in files]
 	all_reads = []
 	for cfile in files:
 		num_tested = 0
@@ -266,6 +270,8 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 			raise ValueError('no fasta files found in %d' % fasta_dir)
 		if len(files) > max_test:
 			test_files = [files[x] for x in np.random.permutation(len(files))[:max_test]]
+		else:
+			test_files = files
 
 		# test if the sequences are of some known region
 		region = test_kmer_head_region(test_files, fasta_dir)
@@ -280,8 +286,8 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 			if match_primer is None:
 				rc_dir = 'revcomp'
 				for cfile in files:
-					rev_comp_fasta(os.path.join(fasta_dir, cfile, rc_dir))
-					fasta_dir = rc_dir
+					rev_comp_fasta(os.path.join(fasta_dir, cfile), rc_dir)
+				fasta_dir = rc_dir
 				region = test_kmer_head_region(test_files, fasta_dir)
 				if region is not None:
 					logging.info('Found exact region %s after reverse complement')
@@ -303,7 +309,7 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 				raise ValueError('No matching regions/primers. please check manually!')
 
 	# check the length of typical reads
-	read_len = test_read_length(files)
+	read_len = test_read_length(files, fasta_dir)
 	logging.info('typical read length = %d' % read_len)
 	if read_len < 100:
 		raise ValueError('Read length %d too short' % read_len)
