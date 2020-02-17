@@ -65,7 +65,7 @@ def rev_comp_fasta(infile, outdir, reverse=True, complement=True):
 			ofl.write(cseq + '\n')
 
 
-def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}, max_start=10, min_primer_len=10, num_reads=1000, min_fraction=0.25, min_files_fraction=0.5):
+def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}, max_start=25, min_primer_len=10, num_reads=1000, min_fraction=0.25, min_files_fraction=0.5):
 	'''Check if the fasta file starts with one of a given set of primers.
 
 	Parameters
