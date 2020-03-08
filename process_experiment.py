@@ -206,8 +206,9 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 		files = [os.path.join(base_dir, x) for x in files]
 	file_primers = defaultdict(float)
 	kmer_len = len(kmers['v4'][0])
+	logging.debug('testing kmer head for region on %d files:' % len(files))
 	for cfile in files:
-		logging.info(cfile)
+		logging.debug(cfile)
 		num_tested = 0
 		kmer_dist = defaultdict(float)
 		for cseq, chead in iterfastaseqs(cfile):
