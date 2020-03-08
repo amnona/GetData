@@ -234,7 +234,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 	return None
 
 
-def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False):
+def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1):
 	'''download the Sra table, convert to known region, and deblur
 
 	Parameters
@@ -253,6 +253,12 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 		True to skip the validation step that the sample is not WGS before downloading
 	skip_region:bool, optional
 		True to skip the region validation step (always process initial fasta reads)
+	deblur_path: str or None, optional
+		if not None, path to the directory containined the preprocessed artifacts/repseqs files for deblur
+		(88_otus.bursttrie_0.dat, 88_otus.kmer_0.dat, 88_otus.pos_0.dat, 88_otus.stats, artifacts.bursttrie_0.dat, artifacts.kmer_0.dat, artifacts.pos_0.dat, artifacts.stats)
+		if None, deblur will preprocess
+	num_threads: int, optional
+		the number of threads to run deblur with
 	'''
 	# get all the fasta files
 	if not skip_get:
@@ -322,9 +328,10 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 	params += ['--seqs-fp', fasta_dir]
 	params += ['--output-dir', 'deblur']
 	params += ['-w', '-t', str(read_len)]
-	params += ['-O', '32', '--min-reads', '10']
-	params += ['--pos-ref-db-fp', '/home/amam7564/data/icu/deblur/deblur_working_dir/88_otus']
-	params += ['--neg-ref-db-fp', '/home/amam7564/data/icu/deblur/deblur_working_dir/artifacts']
+	params += ['-O', str(num_threads), '--min-reads', '10']
+	if deblur_path is not None:
+		params += ['--pos-ref-db-fp', os.path.join(deblur_path, '88_otus')]
+		params += ['--pos-ref-db-fp', os.path.join(deblur_path, 'artifacts')]
 	subprocess.call(params)
 	logging.info('done')
 
@@ -339,12 +346,14 @@ def main(argv):
 	parser.add_argument('--skip-region', help='if set, skip validating/trimming region for primers (just process fasta)', action='store_true')
 	parser.add_argument('--log-file', help='log file for the run', default='process_experiment.log')
 	parser.add_argument('--log-level', help='level of log file msgs (10=debug, 20=info ... 50=critical', type=int, default=20)
+	parser.add_argument('--deblur-path', help='location of deblur pre-compiled artifacts/rep seqs')
+	parser.add_argument('--num-threads', help='number of threads to run for deblur', default=1)
 
 	args = parser.parse_args(argv)
 
 	logging.basicConfig(filename=args.log_file, filemode='w', format='%(levelname)s:%(message)s', level=args.log_level)
 	logging.debug('process_experiment started')
-	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region)
+	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads)
 
 
 if __name__ == "__main__":
