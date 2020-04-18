@@ -2,7 +2,7 @@
 
 # $1 - project name
 
-# cd ~/dbbact
+cd ~/Projects
 cd $1
 
 # copy the delurred biom table and the run summary

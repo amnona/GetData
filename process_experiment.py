@@ -235,7 +235,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 	return None
 
 
-def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1):
+def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25):
 	'''download the Sra table, convert to known region, and deblur
 
 	Parameters
@@ -260,6 +260,8 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 		if None, deblur will preprocess
 	num_threads: int, optional
 		the number of threads to run deblur with
+	max_primer_start: int, optional
+		the maximal allowed offset for the primer within the reads (so primer does not appear in the middle of the sequence - i.e. v4 in v34)
 	'''
 	# get all the fasta files
 	if not skip_get:
@@ -287,7 +289,7 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 			found_it = True
 		else:
 			# test if sequences contain known primer
-			match_primer, match_primer_name = test_fasta_file(test_files, fasta_dir)
+			match_primer, match_primer_name = test_fasta_file(test_files, fasta_dir, max_start=max_primer_start)
 
 			# no match for primer - let's try reverse-complement
 			if match_primer is None:
@@ -301,7 +303,7 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 					found_it = True
 				else:
 					# test if sequences contain known primer
-					match_primer, match_primer_name = test_fasta_file(test_files, fasta_dir)
+					match_primer, match_primer_name = test_fasta_file(test_files, fasta_dir, max_start=max_primer_start)
 
 			# if found matching primer in sequences, trim it
 			if match_primer is not None:
@@ -345,6 +347,7 @@ def main(argv):
 	parser.add_argument('--skip-16s-check', help='download also samples that seem to be non-16s', action='store_true')
 	parser.add_argument('--skip-get', help='if set, skip getting the fasta files from SRA', action='store_true')
 	parser.add_argument('--skip-region', help='if set, skip validating/trimming region for primers (just process fasta)', action='store_true')
+	parser.add_argument('--max-primer-start', help='the maximal offset (from read start) for primer end', default=25, type=int)
 	parser.add_argument('--log-file', help='log file for the run', default='process_experiment.log')
 	parser.add_argument('--log-level', help='level of log file msgs (10=debug, 20=info ... 50=critical', type=int, default=20)
 	parser.add_argument('--deblur-path', help='location of deblur pre-compiled artifacts/rep seqs')
@@ -354,7 +357,7 @@ def main(argv):
 
 	logging.basicConfig(filename=args.log_file, filemode='w', format='%(levelname)s:%(message)s', level=args.log_level)
 	logging.debug('process_experiment started')
-	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads)
+	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start)
 
 
 if __name__ == "__main__":

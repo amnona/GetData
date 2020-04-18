@@ -3,7 +3,7 @@
 # $1 - new project name
 
 #
-# cd ~/dbbact
+cd ~/Projects
 
 # create the new project directory
 mkdir $1
@@ -23,10 +23,10 @@ cp ../analysis.ipynb .
 ssh amnonam@luna.cslab.openu.ac.il "ssh my.hpc.pub.lan mkdir work/$1"
 
 # copy the SraRunTable to the openu server
-# rsync -avzP -e 'ssh -o "ProxyCommand ssh amnonam@luna.cslab.openu.ac.il -W %h:%p"' SraRunTable.txt amnonam@my.hpc.pub.lan:work/$1/
+rsync -avzP -e 'ssh -o "ProxyCommand ssh amnonam@luna.cslab.openu.ac.il -W %h:%p"' SraRunTable.txt amnonam@my.hpc.pub.lan:work/$1/
 # copy to luna
-rsync -avzP SraRunTable.txt syonat4@luna.cslab.openu.ac.il:SraRunTable.txt
-ssh syonat4@luna.cslab.openu.ac.il "rsync -avzP SraRunTable.txt my.hpc.pub.lan:work/$1/"
+# rsync -avzP SraRunTable.txt syonat4@luna.cslab.openu.ac.il:SraRunTable.txt
+# ssh syonat4@luna.cslab.openu.ac.il "rsync -avzP SraRunTable.txt my.hpc.pub.lan:work/$1/"
 
 
 # run the pipeline
