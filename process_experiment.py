@@ -146,11 +146,15 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 				all_matches[max_primer] += 1
 	if len(all_matches) > 0:
 		maxregion = max(all_matches, key=all_matches.get)
+		logging.debug('best matching region is %s' % maxregion)
 		if all_matches[maxregion] / len(files) >= min_files_fraction:
+			logging.debug('enough matches found for primer %s: %s' % (maxregion, all_matches[maxregion]))
 			return maxregion, primers[maxregion]
+		else:
+			logging.debug('not enough matches per primer. details: %s' % primers)
+	else:
+		logging.debug('no matches found for any primer')
 	logging.info('No match for any of %d primers found' % len(primers))
-	logging.debug('best matching region is %s' % maxregion)
-	logging.debug('best matching per file: %s' % all_matches)
 	return None, None
 
 
