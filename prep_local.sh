@@ -31,4 +31,5 @@ rsync -avzP -e 'ssh -o "ProxyCommand ssh amnonam@luna.cslab.openu.ac.il -W %h:%p
 
 # run the pipeline
 # ssh amnonam@luna.cslab.openu.ac.il "ssh my.hpc.pub.lan \"cd work/$1 ; /opt/slurm/bin/sbatch --mem-per-cpu=32000 --job-name=$1 --mail-type=end --mail-user=amnonim@gmail.com /home/amnonam/scripts/get_exp_batch.sh\""
-ssh amnonam@luna.cslab.openu.ac.il "ssh my.hpc.pub.lan \"cd work/$1 ; /home/amnonam/scripts/doit2.sh --mem-per-cpu=32000 --job-name=$1 --mail-type=end --mail-user=amnonim@gmail.com\""
+# ssh amnonam@luna.cslab.openu.ac.il "ssh my.hpc.pub.lan \"cd work/$1 ; /home/amnonam/scripts/doit2.sh --mem-per-cpu=32000 --job-name=$1 --mail-type=end --mail-user=amnonim@gmail.com\""
+ssh amnonam@luna.cslab.openu.ac.il "ssh my.hpc.pub.lan \"cd work/$1 ; /home/amnonam/scripts/doit2.sh --mem-per-cpu=8000 --cpus-per-task=1 --job-name=$1 --mail-type=end --mail-user=amnonim@gmail.com\""

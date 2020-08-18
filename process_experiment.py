@@ -93,11 +93,14 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 		the name of the primer region identified
 	'''
 	# attach the base_dir if needed
+	logging.debug('Testing for %d primers' % len(primers))
+
 	if base_dir is not None:
 		files = [os.path.join(base_dir, x) for x in files]
 
 	# trim the primers if needed
 	if min_primer_len is not None:
+		logging.debug('Trimming primers before test to length %d' % min_primer_len)
 		new_primers = {}
 		for k, v in primers.items():
 			pos = len(k)
@@ -120,6 +123,7 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 				numchars += 1
 			new_primers[newp] = v
 		primers = new_primers
+		logging.debug('Trimmed primers are: %s' % primers)
 
 	# scan the files
 	all_matches = defaultdict(float)
@@ -144,6 +148,9 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 		maxregion = max(all_matches, key=all_matches.get)
 		if all_matches[maxregion] / len(files) > min_files_fraction:
 			return maxregion, primers[maxregion]
+	logging.info('No match for any of %d primers found' % len(primers))
+	logging.debug('best matching region is %s' % maxregion)
+	logging.debug('best matching per file: %s' % all_matches)
 	return None, None
 
 
