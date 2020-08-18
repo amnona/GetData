@@ -65,7 +65,7 @@ def rev_comp_fasta(infile, outdir, reverse=True, complement=True):
 			ofl.write(cseq + '\n')
 
 
-def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}, max_start=25, min_primer_len=10, num_reads=1000, min_fraction=0.25, min_files_fraction=0.5):
+def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}, max_start=25, min_primer_len=10, num_reads=1000, min_fraction=0.25, min_files_fraction=0.2):
 	'''Check if the fasta file starts with one of a given set of primers.
 
 	Parameters
@@ -93,7 +93,7 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 		the name of the primer region identified
 	'''
 	# attach the base_dir if needed
-	logging.debug('Testing for %d primers' % len(primers))
+	logging.debug('Testing %d files for %d primers' % (len(files), len(primers)))
 
 	if base_dir is not None:
 		files = [os.path.join(base_dir, x) for x in files]
@@ -146,7 +146,7 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 				all_matches[max_primer] += 1
 	if len(all_matches) > 0:
 		maxregion = max(all_matches, key=all_matches.get)
-		if all_matches[maxregion] / len(files) > min_files_fraction:
+		if all_matches[maxregion] / len(files) >= min_files_fraction:
 			return maxregion, primers[maxregion]
 	logging.info('No match for any of %d primers found' % len(primers))
 	logging.debug('best matching region is %s' % maxregion)
