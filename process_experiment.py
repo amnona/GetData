@@ -246,7 +246,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 	return None
 
 
-def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25):
+def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False):
 	'''download the Sra table, convert to known region, and deblur
 
 	Parameters
@@ -273,6 +273,8 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 		the number of threads to run deblur with
 	max_primer_start: int, optional
 		the maximal allowed offset for the primer within the reads (so primer does not appear in the middle of the sequence - i.e. v4 in v34)
+	skip_exact: bool, optional
+		if True, skip the exact region match test (no trimming) - assume it is not exact
 	'''
 	# get all the fasta files
 	if not skip_get:
@@ -293,8 +295,11 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 		else:
 			test_files = files
 
-		# test if the sequences are of some known region
-		region = test_kmer_head_region(test_files, fasta_dir)
+		if not skip_exact:
+			# test if the sequences are of some known region
+			region = test_kmer_head_region(test_files, fasta_dir)
+		else:
+			region = None
 		if region is not None:
 			logging.info('region is %s and no primer trimming needed' % region)
 			found_it = True
@@ -358,6 +363,7 @@ def main(argv):
 	parser.add_argument('--skip-16s-check', help='download also samples that seem to be non-16s', action='store_true')
 	parser.add_argument('--skip-get', help='if set, skip getting the fasta files from SRA', action='store_true')
 	parser.add_argument('--skip-region', help='if set, skip validating/trimming region for primers (just process fasta)', action='store_true')
+	parser.add_argument('--skip-exact', help='if set, assume the sequence is not an exact region match (force primer checking)', action='store_true')
 	parser.add_argument('--max-primer-start', help='the maximal offset (from read start) for primer end', default=25, type=int)
 	parser.add_argument('--log-file', help='log file for the run', default='process_experiment.log')
 	parser.add_argument('--log-level', help='level of log file msgs (10=debug, 20=info ... 50=critical', type=int, default=20)
@@ -368,7 +374,7 @@ def main(argv):
 
 	logging.basicConfig(filename=args.log_file, filemode='w', format='%(levelname)s:%(message)s', level=args.log_level)
 	logging.debug('process_experiment started')
-	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start)
+	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact)
 
 
 if __name__ == "__main__":
