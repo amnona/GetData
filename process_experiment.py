@@ -65,6 +65,19 @@ def rev_comp_fasta(infile, outdir, reverse=True, complement=True):
 			ofl.write(cseq + '\n')
 
 
+def trim_fasta(infile, outdir, ltrim_len=1):
+	'''Left trim fasta file to (removing ltrim_len first nucleotides and store in outdir
+	'''
+	if not os.path.exists(outdir):
+		os.makedirs(outdir)
+	outfile = os.path.join(outdir, os.path.basename(infile))
+	logging.debug('ltrim file %s into %s len %d' % (infile, outfile, ltrim_len))
+	with open(outfile, 'w') as ofl:
+		for cseq, chead in iterfastaseqs(infile):
+			ofl.write('>' + chead + '\n')
+			ofl.write(cseq[ltrim_len:] + '\n')
+
+
 def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}, max_start=25, min_primer_len=10, num_reads=1000, min_fraction=0.25, min_files_fraction=0.2):
 	'''Check if the fasta file starts with one of a given set of primers.
 
@@ -189,7 +202,7 @@ def test_read_length(files, base_dir=None, num_reads=1000, prctile=75):
 	return int(np.percentile(all_reads, prctile))
 
 
-def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}, num_reads=1000, min_fraction=0.5, min_files_fraction=0.5):
+def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}, num_reads=1000, min_fraction=0.5, min_files_fraction=0.5, ltrim=0):
 	'''Test if a fasta file starts with known region k-mers
 
 	Parameters
@@ -207,6 +220,8 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 		the minimal expected fraction of reads in the region starting with the kmers (summed over all kmers of the region)
 	min_files_fraction: float
 		the minimal fraction of files positive for the primer in order to identify the experiment
+	ltrim: int, optional
+		position of first nucleotide to start with. 0 to start from beginning
 
 	Returns
 	-------
@@ -223,7 +238,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 		num_tested = 0
 		kmer_dist = defaultdict(float)
 		for cseq, chead in iterfastaseqs(cfile):
-			cseq = cseq[:kmer_len]
+			cseq = cseq[ltrim:ltrim + kmer_len]
 			for cregion, ckmers in kmers.items():
 				if cseq in ckmers:
 					kmer_dist[cregion] += 1
@@ -320,6 +335,17 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 				else:
 					# test if sequences contain known primer
 					match_primer, match_primer_name = test_fasta_file(test_files, fasta_dir, max_start=max_primer_start)
+					# if still not found, maybe need to skip first 1-5 bases (short forward primer....)
+					if match_primer is None:
+						for ctrim in range(5):
+							region = test_kmer_head_region(test_files, fasta_dir, ltrim=ctrim + 1)
+							if region is not None:
+								logging.info('Found. Need %d left trimming. region is %s' % (ctrim, region))
+								trimdir = 'trimmed'
+								for cfile in files:
+									trim_fasta(cfile, trimdir, ltrim_len=ctrim)
+								fasta_dir = trimdir
+								found_it = True
 
 			# if found matching primer in sequences, trim it
 			if match_primer is not None:
