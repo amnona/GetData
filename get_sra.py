@@ -37,6 +37,8 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                 name of the output directory for the downloads
         skip_16s_check: bool, optional
                 if True, try to identify which samples are WGS and not 16s (>500M reads, not PCR/AMPLICON) and ignore them
+        split_files: bool, optional
+                if True, split the samples into forward and reverse reads
 
         Returns
         -------
