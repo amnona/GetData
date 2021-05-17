@@ -18,7 +18,7 @@ import subprocess
 __version__ = "1.2"
 
 
-def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outdir='fasta', skip_16s_check=True):
+def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outdir='fasta', skip_16s_check=True, split_files=False):
         '''Get all the samples from the SRA. Using the Metadata (runinfo metadata) table SraRunTable.txt from the run browser
 
         Parameters
@@ -37,6 +37,8 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                 name of the output directory for the downloads
         skip_16s_check: bool, optional
                 if True, try to identify which samples are WGS and not 16s (>500M reads, not PCR/AMPLICON) and ignore them
+        split_files: bool, optional
+                if True, split the samples into forward and reverse reads
 
         Returns
         -------
@@ -89,6 +91,8 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                 print("getting file %s" % csamp)
                 params = [os.path.join(path, 'fastq-dump'), '--disable-multithreading']
                 params += ['--outdir', outdir]
+                if split_files:
+                        params += ['--split-files']
                 if not fastq:
                         params += ['--fasta']
                 params += [csamp]
@@ -106,8 +110,9 @@ def main(argv):
         parser.add_argument('-p', '--path', help='path to the sratoolkit binary', default='/home/amam7564/bin/sratoolkit.2.8.0-centos_linux64/bin/')
         parser.add_argument('-s', '--skipifhere', help='if set, dont reload files already in the dir', action='store_true')
         parser.add_argument('-q', '--fastq', help='if set, output fastq instead of fasta', action='store_true')
+        parser.add_argument('-r', '--split-files', help='if set, split forward and reverse reads', action='store_true')
         args = parser.parse_args(argv)
-        GetSRA(args.input, args.path, args.skipifhere, fastq=args.fastq)
+        GetSRA(args.input, args.path, args.skipifhere, fastq=args.fastq, split_files=args.split_files)
 
 
 if __name__ == "__main__":
