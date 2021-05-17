@@ -110,9 +110,9 @@ def main(argv):
         parser.add_argument('-p', '--path', help='path to the sratoolkit binary', default='/home/amam7564/bin/sratoolkit.2.8.0-centos_linux64/bin/')
         parser.add_argument('-s', '--skipifhere', help='if set, dont reload files already in the dir', action='store_true')
         parser.add_argument('-q', '--fastq', help='if set, output fastq instead of fasta', action='store_true')
-        parser.add_argument('-q', '--split-files', help='if set, output fastq instead of fasta', action='store_true')
+        parser.add_argument('-r', '--split-files', help='if set, split forward and reverse reads', action='store_true')
         args = parser.parse_args(argv)
-        GetSRA(args.input, args.path, args.skipifhere, fastq=args.fastq, split_files=split_files)
+        GetSRA(args.input, args.path, args.skipifhere, fastq=args.fastq, split_files=args.split_files)
 
 
 if __name__ == "__main__":
