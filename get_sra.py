@@ -80,6 +80,11 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
 						print("skipping sample %s since it seems not 16S")
 						num_skipped += 1
 						continue
+				if 'Bases' in cline:
+					if int(cline['Bases']) > 500000000:
+						print("skipping sample %s since it seems not 16S")
+						num_skipped += 1
+						continue
 
 		if skipifthere:
 			if os.path.isfile(os.path.join(outdir, csamp) + '.fasta'):
