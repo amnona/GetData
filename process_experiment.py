@@ -384,7 +384,7 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 def main(argv):
 	parser = argparse.ArgumentParser(description='Process experiment version ' + __version__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument('-i', '--input', help='name of input SraRunTable file (with the sample accessions')
-	parser.add_argument('-p', '--sra-path', help='path to the sratoolkit binary', default='/home/amam7564/bin/sratoolkit.2.8.0-centos_linux64/bin/')
+	parser.add_argument('-p', '--sra-path', help='path to the sratoolkit binary', default='/home/amam7564/bin/sratoolkit.3.0.0-centos_linux64/bin/')
 	parser.add_argument('-t', '--trim-length', help='length to trim seqs after primer removal', default=150, type=int)
 	parser.add_argument('--skip-16s-check', help='download also samples that seem to be non-16s', action='store_true')
 	parser.add_argument('--skip-get', help='if set, skip getting the fasta files from SRA', action='store_true')

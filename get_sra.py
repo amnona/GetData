@@ -112,7 +112,7 @@ def main(argv):
         parser = argparse.ArgumentParser(description='Get all samples of a study from the SRA version ' + __version__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         parser.add_argument('-i', '--input', help='sra runinfo table for the study')
         parser.add_argument('-o', '--outdir', help='directory to place the fasta/fastq files', default='fasta')
-        parser.add_argument('-p', '--path', help='path to the sratoolkit binary', default='/home/amam7564/bin/sratoolkit.2.8.0-centos_linux64/bin/')
+        parser.add_argument('-p', '--path', help='path to the sratoolkit binary', default='/home/amam7564/bin/sratoolkit.3.0.0-centos_linux64/bin/')
         parser.add_argument('-s', '--skipifhere', help='if set, dont reload files already in the dir', action='store_true')
         parser.add_argument('-q', '--fastq', help='if set, output fastq instead of fasta', action='store_true')
         parser.add_argument('-r', '--split-files', help='if set, split forward and reverse reads', action='store_true')
