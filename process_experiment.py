@@ -304,7 +304,7 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 	found_it = False
 	if not skip_region:
 		if len(files) == 0:
-			raise ValueError('no fasta files found in %d' % fasta_dir)
+			raise ValueError('no fasta files found in %s' % fasta_dir)
 		if len(files) > max_test:
 			test_files = [files[x] for x in np.random.permutation(len(files))[:max_test]]
 		else:
