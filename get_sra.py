@@ -99,7 +99,7 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                 if split_files:
                         params += ['--split-files']
                 if not fastq:
-                        params += ['--fasta']
+                        params += ['--fasta', '0']
                 params += [csamp]
                 print(params)
                 subprocess.call(params)
