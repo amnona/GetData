@@ -98,7 +98,7 @@ def get_region(inputname, outputname, fprimer, rprimer=None, length=0, remove_am
 
     for cfile, coutfile in zip(filelist, outfilelist):
         # add only .fasta/.fa files from the dir
-        if cfile[-6:] == '.fasta' or cfile[-3:] == '.fa':
+        if cfile.endswith('.fasta') or cfile.endswith('.fa') or cfile.endwith('.fastq'):
             get_region_single(cfile, fprimer, rprimer, length, remove_ambig, keep_primers, skip_reverse, output_mismatch, output_file=coutfile)
 
 
