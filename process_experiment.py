@@ -317,6 +317,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 
 	# check if known region / if we need to trim primer
 	files = [f for f in os.listdir(reads_dir) if f.endswith('.fasta') or f.endswith('fastq')]
+	print('found %d files' % len(files))
 	found_it = False
 	if not skip_region:
 		if len(files) == 0:
