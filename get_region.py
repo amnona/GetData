@@ -18,6 +18,8 @@ import sys
 import re
 import os
 
+from utils import iterfastaseqs
+
 
 def get_region_single(inputname, fprimer, rprimer, length, remove_ambig, keep_primers, skip_reverse, output_mismatch=False, output_file=None):
     '''
@@ -98,33 +100,6 @@ def get_region(inputname, outputname, fprimer, rprimer=None, length=0, remove_am
         # add only .fasta/.fa files from the dir
         if cfile[-6:] == '.fasta' or cfile[-3:] == '.fa':
             get_region_single(cfile, fprimer, rprimer, length, remove_ambig, keep_primers, skip_reverse, output_mismatch, output_file=coutfile)
-
-
-def iterfastaseqs(filename):
-    """
-    iterate a fasta file and return header,sequence
-    input:
-    filename - the fasta file name
-
-    output:
-    seq - the sequence
-    header - the header
-    """
-
-    fl = open(filename, "rU")
-    cseq = ''
-    chead = ''
-    for cline in fl:
-        if cline[0] == '>':
-            if chead:
-                yield(cseq, chead)
-            cseq = ''
-            chead = cline[1:].rstrip()
-        else:
-            cseq += cline.strip().replace('U', 'T')
-    if cseq:
-        yield(cseq, chead)
-    fl.close()
 
 
 def main(argv):
