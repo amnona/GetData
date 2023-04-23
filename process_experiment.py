@@ -32,16 +32,20 @@ def iterfastaseqs(filename):
 	fl = open(filename, "r")
 	cseq = ''
 	chead = ''
+	skip_next = False
 
 	for cline in fl:
+		if skip_next:
+			skip_next = False
+			continue
 		if cline[0] == '>' or cline[0] == '@':
 			if chead:
 				yield(cseq, chead)
 			cseq = ''
 			chead = cline[1:].rstrip()
 		elif cline[0] == '+':
-			# skip the quality line
-			cline = fl.next()
+			# need to skip the next line since it is the quality scores
+			skip_next = True
 		else:
 			cseq += cline.strip().replace('U', 'T')
 	if cseq:
