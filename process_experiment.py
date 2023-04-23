@@ -20,9 +20,9 @@ __version__ = "0.1"
 
 def iterfastaseqs(filename):
 	"""
-	iterate a fasta file and return header,sequence
+	iterate a fasta or fastq file and return header,sequence
 	input:
-	filename - the fasta file name
+	filename - the fasta/fastq file name
 
 	output:
 	seq - the sequence
@@ -32,12 +32,16 @@ def iterfastaseqs(filename):
 	fl = open(filename, "r")
 	cseq = ''
 	chead = ''
+
 	for cline in fl:
-		if cline[0] == '>':
+		if cline[0] == '>' or cline[0] == '@':
 			if chead:
 				yield(cseq, chead)
 			cseq = ''
 			chead = cline[1:].rstrip()
+		elif cline[0] == '+':
+			# skip the quality line
+			cline = fl.next()
 		else:
 			cseq += cline.strip().replace('U', 'T')
 	if cseq:
@@ -261,14 +265,14 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 	return None
 
 
-def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False):
+def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False, fastq=False):
 	'''download the Sra table, convert to known region, and deblur
 
 	Parameters
 	----------
 	infile: str
 		name of the input SraRunTable (tab or comma delimited)
-	fasta_dir: str, optional
+	reads_dir: str, optional
 		name of the output fasta directory for the sra download
 	max_test: int, optional
 		maximal number of files to check for primer/region
@@ -290,21 +294,29 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 		the maximal allowed offset for the primer within the reads (so primer does not appear in the middle of the sequence - i.e. v4 in v34)
 	skip_exact: bool, optional
 		if True, skip the exact region match test (no trimming) - assume it is not exact
+	fastq: bool, optional
+		if True, download the fastq files instead of fasta
 	'''
 	# get all the fasta files
 	if not skip_get:
 		logging.info('processing sratable %s' % infile)
-		num_files = get_sra.GetSRA(infile, sra_path, skipifthere=True, outdir=fasta_dir, skip_16s_check=skip_16s_check)
+		num_files = get_sra.GetSRA(infile, sra_path, skipifthere=True, outdir=reads_dir, skip_16s_check=skip_16s_check,fastq=fastq)
 		logging.info('downloaded %d files' % num_files)
 	else:
 		logging.info('skipping getting files from sra')
 
+	if reads_dir is None:
+		if fastq:
+			reads_dir = 'fastq'
+		else:
+			reads_dir = 'fasta'
+
 	# check if known region / if we need to trim primer
-	files = [f for f in os.listdir(fasta_dir) if f.endswith('.fasta')]
+	files = [f for f in os.listdir(reads_dir) if f.endswith('.fasta') or f.endswith('fastq')]
 	found_it = False
 	if not skip_region:
 		if len(files) == 0:
-			raise ValueError('no fasta files found in %s' % fasta_dir)
+			raise ValueError('no fasta files found in %s' % reads_dir)
 		if len(files) > max_test:
 			test_files = [files[x] for x in np.random.permutation(len(files))[:max_test]]
 		else:
@@ -312,7 +324,7 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 
 		if not skip_exact:
 			# test if the sequences are of some known region
-			region = test_kmer_head_region(test_files, fasta_dir)
+			region = test_kmer_head_region(test_files, reads_dir)
 		else:
 			region = None
 		if region is not None:
@@ -320,39 +332,39 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 			found_it = True
 		else:
 			# test if sequences contain known primer
-			match_primer, match_primer_name = test_fasta_file(test_files, fasta_dir, max_start=max_primer_start)
+			match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start)
 
 			# no match for primer - let's try reverse-complement
 			if match_primer is None:
 				rc_dir = 'revcomp'
 				for cfile in files:
-					rev_comp_fasta(os.path.join(fasta_dir, cfile), rc_dir)
-				fasta_dir = rc_dir
-				region = test_kmer_head_region(test_files, fasta_dir)
+					rev_comp_fasta(os.path.join(reads_dir, cfile), rc_dir)
+				reads_dir = rc_dir
+				region = test_kmer_head_region(test_files, reads_dir)
 				if region is not None:
 					logging.info('Found exact region %s after reverse complement')
 					found_it = True
 				else:
 					# test if sequences contain known primer
-					match_primer, match_primer_name = test_fasta_file(test_files, fasta_dir, max_start=max_primer_start)
+					match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start)
 					# if still not found, maybe need to skip first 1-5 bases (short forward primer....)
 					if match_primer is None:
 						for ctrim in range(5):
-							region = test_kmer_head_region(test_files, fasta_dir, ltrim=ctrim + 1)
+							region = test_kmer_head_region(test_files, reads_dir, ltrim=ctrim + 1)
 							if region is not None:
 								logging.info('Found. Need %d left trimming. region is %s' % (ctrim, region))
 								trimdir = 'trimmed'
 								for cfile in files:
 									trim_fasta(cfile, trimdir, ltrim_len=ctrim)
-								fasta_dir = trimdir
+								reads_dir = trimdir
 								found_it = True
 
 			# if found matching primer in sequences, trim it
 			if match_primer is not None:
 				logging.info('trimming with primer %s for region %s' % (match_primer, match_primer_name))
 				trim_dir = 'trim'
-				get_region.get_region(fasta_dir, outputname=trim_dir, fprimer=match_primer, skip_reverse=True)
-				fasta_dir = trim_dir
+				get_region.get_region(reads_dir, outputname=trim_dir, fprimer=match_primer, skip_reverse=True)
+				reads_dir = trim_dir
 				logging.info('finished trimming')
 				found_it = True
 			# after all these tries didn't identify reads as coming from any known region
@@ -360,7 +372,7 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 				raise ValueError('No matching regions/primers. please check manually!')
 
 	# check the length of typical reads
-	read_len = test_read_length(files, fasta_dir)
+	read_len = test_read_length(files, reads_dir)
 	logging.info('typical read length = %d' % read_len)
 	if read_len < 100:
 		raise ValueError('Read length %d too short' % read_len)
@@ -370,7 +382,7 @@ def process_experiment(infile, sra_path, fasta_dir='fasta', max_test=10, skip_ge
 	params = []
 	# params += ['qsub', '-d', '$PWD', '-V', '-m', 'abe', '-M', 'amnonimjobs@gmail.com', '-j', 'eo', '-e', 'process.err', '-l', 'walltime=48:00:00,nodes=1:ppn=32,mem=250gb', '-N', 'process']
 	params += ['deblur', 'workflow']
-	params += ['--seqs-fp', fasta_dir]
+	params += ['--seqs-fp', reads_dir]
 	params += ['--output-dir', 'deblur']
 	params += ['-w', '-t', str(read_len)]
 	params += ['-O', str(num_threads), '--min-reads', '10']
@@ -388,6 +400,7 @@ def main(argv):
 	parser.add_argument('-t', '--trim-length', help='length to trim seqs after primer removal', default=150, type=int)
 	parser.add_argument('--skip-16s-check', help='download also samples that seem to be non-16s', action='store_true')
 	parser.add_argument('--skip-get', help='if set, skip getting the fasta files from SRA', action='store_true')
+	parser.add_argument('--fastq', help='if set, get FASTQ instead of FASTA from SRA', action='store_true')
 	parser.add_argument('--skip-region', help='if set, skip validating/trimming region for primers (just process fasta)', action='store_true')
 	parser.add_argument('--skip-exact', help='if set, assume the sequence is not an exact region match (force primer checking)', action='store_true')
 	parser.add_argument('--max-primer-start', help='the maximal offset (from read start) for primer end', default=25, type=int)
@@ -400,7 +413,7 @@ def main(argv):
 
 	logging.basicConfig(filename=args.log_file, filemode='w', format='%(levelname)s:%(message)s', level=args.log_level)
 	logging.debug('process_experiment started')
-	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact)
+	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq)
 
 
 if __name__ == "__main__":
