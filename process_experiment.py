@@ -297,6 +297,12 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	fastq: bool, optional
 		if True, download the fastq files instead of fasta
 	'''
+	if reads_dir is None:
+		if fastq:
+			reads_dir = 'fastq'
+		else:
+			reads_dir = 'fasta'
+
 	# get all the fasta files
 	if not skip_get:
 		logging.info('processing sratable %s' % infile)
@@ -304,12 +310,6 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		logging.info('downloaded %d files' % num_files)
 	else:
 		logging.info('skipping getting files from sra')
-
-	if reads_dir is None:
-		if fastq:
-			reads_dir = 'fastq'
-		else:
-			reads_dir = 'fasta'
 
 	# check if known region / if we need to trim primer
 	files = [f for f in os.listdir(reads_dir) if f.endswith('.fasta') or f.endswith('fastq')]

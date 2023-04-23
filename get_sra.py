@@ -52,7 +52,7 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                         delimiter = res.delimiter
                         print('Detected delimiter %s' % delimiter)
 
-        ifile = csv.DictReader(open(inputname, 'rU'), delimiter=delimiter)
+        ifile = csv.DictReader(open(inputname, 'r'), delimiter=delimiter)
         num_files = 0
         num_skipped = 0
         for cline in ifile:
