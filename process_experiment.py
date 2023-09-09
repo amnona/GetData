@@ -52,7 +52,7 @@ def trim_fasta(infile, outdir, ltrim_len=1):
 			ofl.write(cseq[ltrim_len:] + '\n')
 
 
-def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}, max_start=25, min_primer_len=10, num_reads=1000, min_fraction=0.25, min_files_fraction=0.2):
+def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4', 'GTAAAAGTCGTAACAAGG': 'ITS5'}, max_start=25, min_primer_len=10, num_reads=1000, min_fraction=0.25, min_files_fraction=0.2):
 	'''Check if the fasta file starts with one of a given set of primers.
 
 	Parameters
@@ -176,7 +176,7 @@ def test_read_length(files, base_dir=None, num_reads=1000, prctile=75):
 	return int(np.percentile(all_reads, prctile))
 
 
-def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}, num_reads=1000, min_fraction=0.5, min_files_fraction=0.5, ltrim=0):
+def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG'], 'ITS5': ['TTTC','TCTC']}, num_reads=1000, min_fraction=0.5, min_files_fraction=0.5, ltrim=0):
 	'''Test if a fasta file starts with known region k-mers
 
 	Parameters
