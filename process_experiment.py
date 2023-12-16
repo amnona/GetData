@@ -10,6 +10,9 @@ from collections import defaultdict
 import subprocess
 import logging
 
+# set the logging so will write the date/time
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
 import numpy as np
 
 import get_sra
