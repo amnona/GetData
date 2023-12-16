@@ -12,12 +12,8 @@ eval "$(conda shell.bash hook)"
 conda activate calour
 echo "conda env started. submitting batch"
 
-echo "p1"
 echo "doit2.sh Processing $DIR_NAME"
-echo "p2"
 echo "additional parameters: $@"
-echo "p3"
 
 sbatch --mail-type=end --mail-user=amnonim@gmail.com --job-name=$DIR_NAME ~/scripts/get_exp_batch.sh $@
-echo "p4"
 echo "submitted"
