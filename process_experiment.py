@@ -12,7 +12,7 @@ import logging
 
 print('batata')
 # set the logging so will write the date/time
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+# logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 import numpy as np
 
