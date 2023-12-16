@@ -206,7 +206,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 		files = [os.path.join(base_dir, x) for x in files]
 	file_primers = defaultdict(float)
 	kmer_len = len(kmers['v4'][0])
-	logging.debug('testing kmer head for region on %d files:' % len(files))
+	logging.info('testing kmer head using %d heads for region on %d files:' % (len(kmers),len(files)))
 	for cfile in files:
 		logging.debug(cfile)
 		num_tested = 0
@@ -287,17 +287,17 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	logging.debug('found %d files' % len(files))
 	found_it = False
 	if not skip_region:
-		logging.debug('testing region')
+		logging.info('** testing region')
 		if len(files) == 0:
 			raise ValueError('no fasta files found in %s' % reads_dir)
 		if len(files) > max_test:
 			test_files = [files[x] for x in np.random.permutation(len(files))[:max_test]]
 		else:
 			test_files = files
-		logging.debug('testing in representative set of %d files' % len(test_files))
+		logging.info('testing in representative set of %d files' % len(test_files))
 
 		if not skip_exact:
-			logging.debug('testing exact region match')
+			logging.info('testing exact region match')
 			# test if the sequences are of some known region
 			region = test_kmer_head_region(test_files, reads_dir)
 		else:
@@ -306,33 +306,35 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 			logging.info('region is %s and no primer trimming needed' % region)
 			found_it = True
 		else:
+			logging.info('no exact region match')
 			# test if sequences contain known primer
-			logging.debug('testing primer match within %d first bases' % max_primer_start)
+			logging.info('testing primer match within %d first bases' % max_primer_start)
 			match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start)
 
 			# no match for primer - let's try reverse-complement
 			if match_primer is None:
-				logging.debug('no match for primer. trying reverse complement')
+				logging.info('no match for primer.')
+				logging.info('trying reverse complement')
 				rc_dir = 'revcomp'
 				for cfile in files:
 					rev_comp_fasta(os.path.join(reads_dir, cfile), rc_dir)
 				reads_dir = rc_dir
-				logging.debug('testing exact region match or reverse complement')
+				logging.info('testing exact region match or reverse complement')
 				region = test_kmer_head_region(test_files, reads_dir)
 				if region is not None:
 					logging.info('Found exact region %s after reverse complement')
 					found_it = True
 				else:
-					logging.debug('testing primer match within %d first bases for reverse complement' % max_primer_start)
+					logging.info('testing primer match within %d first bases for reverse complement' % max_primer_start)
 					# test if sequences contain known primer
 					match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start)
 					# if still not found, maybe need to skip first 1-5 bases (short forward primer....)
 					if match_primer is None:
-						logging.debug('no match for primer. trying short left trimming and region match')
+						logging.info('no match for primer. trying short left trimming and region match')
 						for ctrim in range(5):
 							region = test_kmer_head_region(test_files, reads_dir, ltrim=ctrim + 1)
 							if region is not None:
-								logging.info('Found. Need %d left trimming. region is %s' % (ctrim, region))
+								logging.info('Found match after short left trimming. Need %d left trimming. region is %s' % (ctrim, region))
 								trimdir = 'trimmed'
 								for cfile in files:
 									trim_fasta(cfile, trimdir, ltrim_len=ctrim)
