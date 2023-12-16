@@ -10,6 +10,7 @@ from collections import defaultdict
 import subprocess
 import logging
 
+print('batata')
 # set the logging so will write the date/time
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -402,4 +403,6 @@ def main(argv):
 
 
 if __name__ == "__main__":
+	print('starting process_experiment.py')
+	logging.info('starting process_experiment.py')
 	main(sys.argv[1:])
