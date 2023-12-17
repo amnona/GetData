@@ -407,13 +407,14 @@ def main(argv):
 	parser.add_argument('--log-level', help='level of log file msgs (10=debug, 20=info ... 50=critical', type=int, default=20)
 	parser.add_argument('--deblur-path', help='location of deblur pre-compiled artifacts/rep seqs')
 	parser.add_argument('--num-threads', help='number of threads to run for deblur', default=1)
-	# add parameter 'exp-type' that can be '16s' or 'its'
 	parser.add_argument('--exp-type', help='type of experiment (16s or its)', default='16s')
 
 	args = parser.parse_args(argv)
 
-	logging.basicConfig(filename=args.log_file, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', level=args.log_level, datefmt='%m/%d/%Y %I:%M:%S %p')
+	print('logging to %s' % args.log_file)
+	logging.basicConfig(filename=args.log_file, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', level=args.log_level, datefmt='%d/%m/%Y %H:%M:%S')
 	logging.info('process_experiment started')
+	logging.warning('process_experiment started')
 	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq, exp_type=args.exp_type)
 
 
