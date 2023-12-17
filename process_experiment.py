@@ -239,7 +239,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 	return None
 
 
-def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False, fastq=False):
+def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False, fastq=False, exp_type='16s'):
 	'''download the Sra table, convert to known region, and deblur
 
 	Parameters
@@ -270,7 +270,18 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		if True, skip the exact region match test (no trimming) - assume it is not exact
 	fastq: bool, optional
 		if True, download the fastq files instead of fasta
+	exp_type: str, optional
+		the type of experiment ("16s" or "its")
 	'''
+	if exp_type == '16s':
+		primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}
+		kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}
+	elif exp_type == 'its':
+		primers={'GTAAAAGTCGTAACAAGG': 'ITS5', 'GTAAAAGTCGTAACAAGGTTTC': 'ITS1F', 'TCCGTAGGTGAACCTGCGG': 'ITS1'}
+		kmers={'ITS5': ['TTTC','TCTC']}
+	else:
+		raise ValueError('unknown experiment type %s (use "16s" or "its")' % exp_type)
+
 	if reads_dir is None:
 		if fastq:
 			reads_dir = 'fastq'
@@ -303,7 +314,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		if not skip_exact:
 			logging.info('testing exact region match')
 			# test if the sequences are of some known region
-			region = test_kmer_head_region(test_files, reads_dir)
+			region = test_kmer_head_region(test_files, reads_dir, kmers=kmers)
 		else:
 			region = None
 		if region is not None:
@@ -313,7 +324,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 			logging.info('no exact region match')
 			# test if sequences contain known primer
 			logging.info('testing primer match within %d first bases' % max_primer_start)
-			match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start)
+			match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start, primers=primers)
 
 			# no match for primer - let's try reverse-complement
 			if match_primer is None:
@@ -324,19 +335,19 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 					rev_comp_fasta(os.path.join(reads_dir, cfile), rc_dir)
 				reads_dir = rc_dir
 				logging.info('testing exact region match or reverse complement')
-				region = test_kmer_head_region(test_files, reads_dir)
+				region = test_kmer_head_region(test_files, reads_dir, kmers=kmers)
 				if region is not None:
 					logging.info('Found exact region %s after reverse complement')
 					found_it = True
 				else:
 					logging.info('testing primer match within %d first bases for reverse complement' % max_primer_start)
 					# test if sequences contain known primer
-					match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start)
+					match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start, primers=primers)
 					# if still not found, maybe need to skip first 1-5 bases (short forward primer....)
 					if match_primer is None:
 						logging.info('no match for primer. trying short left trimming and region match')
 						for ctrim in range(5):
-							region = test_kmer_head_region(test_files, reads_dir, ltrim=ctrim + 1)
+							region = test_kmer_head_region(test_files, reads_dir, ltrim=ctrim + 1, kmers=kmers)
 							if region is not None:
 								logging.info('Found match after short left trimming. Need %d left trimming. region is %s' % (ctrim, region))
 								trimdir = 'trimmed'
@@ -394,12 +405,14 @@ def main(argv):
 	parser.add_argument('--log-level', help='level of log file msgs (10=debug, 20=info ... 50=critical', type=int, default=20)
 	parser.add_argument('--deblur-path', help='location of deblur pre-compiled artifacts/rep seqs')
 	parser.add_argument('--num-threads', help='number of threads to run for deblur', default=1)
+	# add parameter 'exp-type' that can be '16s' or 'its'
+	parser.add_argument('--exp-type', help='type of experiment (16s or its)', default='16s')
 
 	args = parser.parse_args(argv)
 
 	logging.basicConfig(filename=args.log_file, filemode='w', format='%(levelname)s:%(message)s', level=args.log_level)
 	logging.debug('process_experiment started')
-	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq)
+	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq, exp_type=args.exp_type)
 
 
 if __name__ == "__main__":
