@@ -207,7 +207,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 	file_primers = defaultdict(float)
 
 	# get the length of the kmers
-	kmer_lens = [len(x) for x in kmers.values()]
+	kmer_lens = [len(x[0]) for x in kmers.values() if len(x) > 0]
 	if len(np.unique(kmer_lens)) > 1:
 		raise ValueError('kmers must be of same length, but we get: %s' % kmers)
 	kmer_len = kmer_lens[0]
