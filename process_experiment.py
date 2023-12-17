@@ -412,14 +412,10 @@ def main(argv):
 	args = parser.parse_args(argv)
 
 	print('logging to %s' % args.log_file)
-	# logging.basicConfig(filename=args.log_file, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', level=args.log_level, datefmt='%d/%m/%Y %H:%M:%S')
-	logging.basicConfig(filename=args.log_file, filemode='w', level=args.log_level)
+	logging.basicConfig(filename=args.log_file, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', level=args.log_level, datefmt='%d/%m/%Y %H:%M:%S', force=True)
 	logging.info('process_experiment started')
-	logging.warning('process_experiment started')
 	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq, exp_type=args.exp_type)
 
 
 if __name__ == "__main__":
-	print('starting process_experiment.py')
-	logging.info('starting process_experiment.py')
 	main(sys.argv[1:])
