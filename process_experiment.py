@@ -80,7 +80,7 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 		the name of the primer region identified
 	'''
 	# attach the base_dir if needed
-	logging.info('Testing %d files for %d primers' % (len(files), len(primers)))
+	logging.debug('Testing %d files for %d primers' % (len(files), len(primers)))
 
 	if base_dir is not None:
 		files = [os.path.join(base_dir, x) for x in files]
@@ -212,7 +212,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 		raise ValueError('kmers must be of same length, but we get: %s' % kmers)
 	kmer_len = kmer_lens[0]
 
-	logging.info('testing kmer head using %d heads for region on %d files:' % (len(kmers),len(files)))
+	logging.debug('testing kmer head using %d heads for region on %d files:' % (len(kmers),len(files)))
 	for cfile in files:
 		logging.debug(cfile)
 		num_tested = 0
