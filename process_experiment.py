@@ -10,10 +10,6 @@ from collections import defaultdict
 import subprocess
 import logging
 
-print('batata')
-# set the logging so will write the date/time
-# logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-
 import numpy as np
 
 import get_sra
@@ -410,8 +406,8 @@ def main(argv):
 
 	args = parser.parse_args(argv)
 
-	logging.basicConfig(filename=args.log_file, filemode='w', format='%(levelname)s:%(message)s', level=args.log_level)
-	logging.debug('process_experiment started')
+	logging.basicConfig(filename=args.log_file, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', level=args.log_level, datefmt='%m/%d/%Y %I:%M:%S %p')
+	logging.info('process_experiment started')
 	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq, exp_type=args.exp_type)
 
 
