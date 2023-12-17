@@ -278,7 +278,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	if exp_type == '16s':
 		primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}
 		kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}
-		logging.info('16s experiment. will for the following regions: %s' % kmers.keys())
+		logging.info('16s experiment. will for the following regions: %s' % list(kmers.keys()))
 	elif exp_type == 'its':
 		primers={'GTAAAAGTCGTAACAAGG': 'ITS5', 'GTAAAAGTCGTAACAAGGTTTC': 'ITS1F', 'TCCGTAGGTGAACCTGCGG': 'ITS1'}
 		kmers={'ITS5': ['TTTC','TCTC'], 'ITS1F': [], 'ITS1': []}
