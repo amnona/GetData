@@ -281,8 +281,8 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		logging.info('16s experiment. will for the following regions: %s' % kmers.keys())
 	elif exp_type == 'its':
 		primers={'GTAAAAGTCGTAACAAGG': 'ITS5', 'GTAAAAGTCGTAACAAGGTTTC': 'ITS1F', 'TCCGTAGGTGAACCTGCGG': 'ITS1'}
-		kmers={'ITS5': ['TTTC','TCTC']}
-		logger.info('its experiment. will for the following regions: %s' % kmers.keys())
+		kmers={'ITS5': ['TTTC','TCTC'], 'ITS1F': [], 'ITS1': []}
+		logging.info('its experiment. will for the following regions: %s' % kmers.keys())
 	else:
 		raise ValueError('unknown experiment type %s (use "16s" or "its")' % exp_type)
 
