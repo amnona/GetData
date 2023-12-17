@@ -205,7 +205,13 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 	if base_dir is not None:
 		files = [os.path.join(base_dir, x) for x in files]
 	file_primers = defaultdict(float)
-	kmer_len = len(kmers['v4'][0])
+
+	# get the length of the kmers
+	kmer_lens = [len(x) for x in kmers.values()]
+	if len(np.unique(kmer_lens)) > 1:
+		raise ValueError('kmers must be of same length, but we get: %s' % kmers)
+	kmer_len = kmer_lens[0]
+
 	logging.info('testing kmer head using %d heads for region on %d files:' % (len(kmers),len(files)))
 	for cfile in files:
 		logging.debug(cfile)
