@@ -282,7 +282,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	elif exp_type == 'its':
 		# primers={'GTAAAAGTCGTAACAAGG': 'ITS5', 'GTAAAAGTCGTAACAAGGTTTC': 'ITS1F', 'TCCGTAGGTGAACCTGCGG': 'ITS1'}
 		# kmers={'ITS5': ['TTTC','TCTC'], 'ITS1F': [], 'ITS1': []}
-		primts = {'GTAAAAGTCGTAACAAGGNNNN': 'ITSF', 'TCCGTAGGTGAACCTGCGG': 'ITS1'}
+		primers = {'GTAAAAGTCGTAACAAGGNNNN': 'ITSF', 'TCCGTAGGTGAACCTGCGG': 'ITS1'}
 		kmers={'ITSF': ['TTTC'], 'ITS1': ['TTTC']}
 		logging.info('its experiment. will for the following regions: %s' % kmers.keys())
 	else:
