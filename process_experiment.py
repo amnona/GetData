@@ -283,7 +283,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}
 		logging.info('16s experiment. will for the following regions: %s' % list(kmers.keys()))
 	elif exp_type == 'its':
-		primers = {'TTGTACACA': 'ITS1-30F', 'GTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'GAGGAAGTAA': 'ITS1F', 'ITSF', 'GAACCTGCGG': 'ITS1', 'GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
+		primers = {'TTGTACACA': 'ITS1-30F', 'GAGGAAGTAA': 'ITS1F', 'GTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'ITSF/ITS5', 'GAACCTGCGG': 'ITS1', 'GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
 		kmers={'ITSF': ['CGTAG'], 'ITS1': ['XXXXX'], 'ITS1-30F': ['XXXXX'], 'ITS1F': ['XXXXX'], 'BITS1': ['XXXXX'], 'ITS3': ['XXXXX'], 'ITS86F': ['XXXXX'], 'FSEQ': ['XXXXX']}
 		min_primer_len = 15
 		logging.info('ITS experiment. will for the following regions: %s' % kmers.keys())
