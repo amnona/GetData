@@ -282,8 +282,8 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	elif exp_type == 'its':
 		# primers={'GTAAAAGTCGTAACAAGG': 'ITS5', 'GTAAAAGTCGTAACAAGGTTTC': 'ITS1F', 'TCCGTAGGTGAACCTGCGG': 'ITS1'}
 		# kmers={'ITS5': ['TTTC','TCTC'], 'ITS1F': [], 'ITS1': []}
-		primers = {'GTAAAAGTCGTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'ITSF', 'TCCGTAGGTGAACCTGCGG': 'ITS1'}
-		kmers={'ITSF': ['CGTAG'], 'ITS1': ['NNNNN']}
+		primers = {'CCTTTGTACACA': 'ITS1-30F', 'GTAAAAGTCGTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'ITSF', 'TCCGTAGGTGAACCTGCGG': 'ITS1', 'GAGGAAGTAA': 'ITS1F','GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
+		kmers={'ITSF': ['CGTAG'], 'ITS1': ['XXXX'], 'ITS1-30F': ['XXXX'], 'ITS1F': ['XXXX'], 'BITS1': ['XXXX'], 'ITS3': ['XXXX'], 'ITS86F': ['XXXX'], 'FSEQ': ['XXXX']}
 		logging.info('its experiment. will for the following regions: %s' % kmers.keys())
 	else:
 		raise ValueError('unknown experiment type %s (use "16s" or "its")' % exp_type)
