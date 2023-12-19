@@ -241,7 +241,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 	return None
 
 
-def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False, fastq=False, exp_type='16s'):
+def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False, fastq=False, exp_type='16s', min_primer_len=10):
 	'''download the Sra table, convert to known region, and deblur
 
 	Parameters
@@ -274,17 +274,18 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		if True, download the fastq files instead of fasta
 	exp_type: str, optional
 		the type of experiment ("16s" or "its")
+	min_primer_len: int, optional
+		the length of the primers to keep (default 10)
 	'''
 	if exp_type == '16s':
 		primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}
 		kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}
 		logging.info('16s experiment. will for the following regions: %s' % list(kmers.keys()))
 	elif exp_type == 'its':
-		# primers={'GTAAAAGTCGTAACAAGG': 'ITS5', 'GTAAAAGTCGTAACAAGGTTTC': 'ITS1F', 'TCCGTAGGTGAACCTGCGG': 'ITS1'}
-		# kmers={'ITS5': ['TTTC','TCTC'], 'ITS1F': [], 'ITS1': []}
-		primers = {'CCTTTGTACACA': 'ITS1-30F', 'GTAAAAGTCGTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'ITSF', 'TCCGTAGGTGAACCTGCGG': 'ITS1', 'GAGGAAGTAA': 'ITS1F','GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
+		primers = {'TTGTACACA': 'ITS1-30F', 'GTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'ITSF', 'GAACCTGCGG': 'ITS1', 'GAGGAAGTAA': 'ITS1F','GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
 		kmers={'ITSF': ['CGTAG'], 'ITS1': ['XXXXX'], 'ITS1-30F': ['XXXXX'], 'ITS1F': ['XXXXX'], 'BITS1': ['XXXXX'], 'ITS3': ['XXXXX'], 'ITS86F': ['XXXXX'], 'FSEQ': ['XXXXX']}
-		logging.info('its experiment. will for the following regions: %s' % kmers.keys())
+		min_primer_len = 15
+		logging.info('ITS experiment. will for the following regions: %s' % kmers.keys())
 	else:
 		raise ValueError('unknown experiment type %s (use "16s" or "its")' % exp_type)
 
@@ -324,13 +325,13 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		else:
 			region = None
 		if region is not None:
-			logging.info('region is %s and no primer trimming needed' % region)
+			logging.info('region is %s with exact match. No primer trimming needed' % region)
 			found_it = True
 		else:
 			logging.info('no exact region match')
 			# test if sequences contain known primer
 			logging.info('testing primer match within %d first bases' % max_primer_start)
-			match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start, primers=primers)
+			match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start, primers=primers, min_primer_len=min_primer_len)
 
 			# no match for primer - let's try reverse-complement
 			if match_primer is None:
