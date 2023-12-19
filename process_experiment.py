@@ -283,7 +283,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		# primers={'GTAAAAGTCGTAACAAGG': 'ITS5', 'GTAAAAGTCGTAACAAGGTTTC': 'ITS1F', 'TCCGTAGGTGAACCTGCGG': 'ITS1'}
 		# kmers={'ITS5': ['TTTC','TCTC'], 'ITS1F': [], 'ITS1': []}
 		primers = {'CCTTTGTACACA': 'ITS1-30F', 'GTAAAAGTCGTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'ITSF', 'TCCGTAGGTGAACCTGCGG': 'ITS1', 'GAGGAAGTAA': 'ITS1F','GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
-		kmers={'ITSF': ['CGTAG'], 'ITS1': ['XXXX'], 'ITS1-30F': ['XXXX'], 'ITS1F': ['XXXX'], 'BITS1': ['XXXX'], 'ITS3': ['XXXX'], 'ITS86F': ['XXXX'], 'FSEQ': ['XXXX']}
+		kmers={'ITSF': ['CGTAG'], 'ITS1': ['XXXXX'], 'ITS1-30F': ['XXXXX'], 'ITS1F': ['XXXXX'], 'BITS1': ['XXXXX'], 'ITS3': ['XXXXX'], 'ITS86F': ['XXXXX'], 'FSEQ': ['XXXXX']}
 		logging.info('its experiment. will for the following regions: %s' % kmers.keys())
 	else:
 		raise ValueError('unknown experiment type %s (use "16s" or "its")' % exp_type)
