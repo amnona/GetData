@@ -132,6 +132,7 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 			if match_fraction > min_fraction:
 				all_matches[max_primer] += 1
 	if len(all_matches) > 0:
+		logging.debug('matches per primer: %s' % all_matches)
 		maxregion = max(all_matches, key=all_matches.get)
 		logging.debug('best matching region is %s' % maxregion)
 		if all_matches[maxregion] / len(files) >= min_files_fraction:
@@ -282,7 +283,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}
 		logging.info('16s experiment. will for the following regions: %s' % list(kmers.keys()))
 	elif exp_type == 'its':
-		primers = {'TTGTACACA': 'ITS1-30F', 'GTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'ITSF', 'GAACCTGCGG': 'ITS1', 'GAGGAAGTAA': 'ITS1F','GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
+		primers = {'TTGTACACA': 'ITS1-30F', 'GTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'GAGGAAGTAA': 'ITS1F', 'ITSF', 'GAACCTGCGG': 'ITS1', 'GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
 		kmers={'ITSF': ['CGTAG'], 'ITS1': ['XXXXX'], 'ITS1-30F': ['XXXXX'], 'ITS1F': ['XXXXX'], 'BITS1': ['XXXXX'], 'ITS3': ['XXXXX'], 'ITS86F': ['XXXXX'], 'FSEQ': ['XXXXX']}
 		min_primer_len = 15
 		logging.info('ITS experiment. will for the following regions: %s' % kmers.keys())
@@ -349,7 +350,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 				else:
 					logging.info('testing primer match within %d first bases for reverse complement' % max_primer_start)
 					# test if sequences contain known primer
-					match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start, primers=primers)
+					match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start, primers=primers, min_primer_len=min_primer_len)
 					# if still not found, maybe need to skip first 1-5 bases (short forward primer....)
 					if match_primer is None:
 						logging.info('no match for primer. trying short left trimming and region match')
