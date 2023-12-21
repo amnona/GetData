@@ -375,7 +375,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 			# after all these tries didn't identify reads as coming from any known region
 			if not found_it:
 				logging.error('**** no match for any primer or region. please checj manually ****')
-				raise ValueError('No matching regions/primers. please check manually!')
+				raise ValueError('No matching regions/primers. please check manually')
 
 	# check the length of typical reads
 	read_len = test_read_length(files, reads_dir)
