@@ -284,7 +284,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		logging.info('16s experiment. will for the following regions: %s' % list(kmers.keys()))
 	elif exp_type == 'its':
 		primers = {'TTGTACACA': 'ITS1-30F', 'GAGGAAGTAA': 'ITS1F', 'GTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'ITSF/ITS5', 'GAACCTGCGG': 'ITS1', 'GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
-		kmers={'ITSF': ['CGTAG'], 'ITS1': ['XXXXX'], 'ITS1-30F': ['XXXXX'], 'ITS1F': ['XXXXX'], 'BITS1': ['XXXXX'], 'ITS3': ['XXXXX'], 'ITS86F': ['XXXXX'], 'FSEQ': ['XXXXX']}
+		kmers={'ITS1-30F': ['XXXXX'], 'ITS1F': ['AAGTC'], 'ITSF/ITS5': ['CGTAG','CGTTG'], 'ITS1': ['AAGGA'],  'BITS1': ['XXXXX'], 'ITS3': ['GAAAT'], 'ITS86F': ['CGCAC'], 'FSEQ': ['XXXXX']}
 		min_primer_len = 15
 		logging.info('ITS experiment. will for the following regions: %s' % kmers.keys())
 	else:
@@ -375,7 +375,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 			# after all these tries didn't identify reads as coming from any known region
 			if not found_it:
 				logging.error('**** no match for any primer or region. please checj manually ****')
-				raise ValueError('No matching regions/primers. please check manually')
+				raise ValueError('No matching regions/primers. please check manually!')
 
 	# check the length of typical reads
 	read_len = test_read_length(files, reads_dir)
