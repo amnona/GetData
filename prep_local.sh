@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # $1 - new project name
-
+# $2 - other parameters to pass to process_experiment.py (typically --exp-type its (if needed) or 16s (default)
 #
 cd ~/Projects
 
@@ -26,7 +26,8 @@ cat SraRunTable.txt | tr "," "\\t" > map.txt
 cp ../analysis.ipynb .
 
 # make remote directory
-ssh amnonam@sheshet.cslab.openu.ac.il "ssh my.hpc.pub.lan mkdir work/$DIR_NAME"
+ssh amnonam@sheshet.cslab.openu.ac.il "ssh login8.hpc.pub.lan mkdir work/$DIR_NAME"
+# ssh amnonam@sheshet.cslab.openu.ac.il "ssh my.hpc.pub.lan mkdir work/$DIR_NAME"
 
 # copy the SraRunTable to the openu server
 rsync -avzP -e 'ssh -o "ProxyCommand ssh amnonam@sheshet.cslab.openu.ac.il -W %h:%p"' SraRunTable.txt amnonam@login8.hpc.pub.lan:work/$DIR_NAME/
