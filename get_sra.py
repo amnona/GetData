@@ -74,19 +74,22 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                 if 'Assay_Type' in cline:
                         if cline['Assay_Type'] != 'AMPLICON':
                                 suspicious = True
-
+                
                 if not skip_16s_check:
                         if suspicious:
-                                if 'MBases' in cline:
+                                try:
+                                    if 'MBases' in cline:
                                         if int(cline['MBases']) > 500:
                                                 print("skipping sample %s since it seems not 16S")
                                                 num_skipped += 1
                                                 continue
-                                if 'Bases' in cline:
-                                    if int(cline['Bases']) > 500000000:
-                                        print("skipping sample %s since it seems not 16S")
-                                        num_skipped += 1
-                                        continue
+                                        if 'Bases' in cline:
+                                            if int(cline['Bases']) > 500000000:
+                                                print("skipping sample %s since it seems not 16S")
+                                            num_skipped += 1
+                                            continue
+                                except ValueError:
+                                    print("error parsing reads count for sample %s" % csamp)
 
                 if skipifthere:
                         if os.path.isfile(os.path.join(outdir, csamp) + '.fasta'):
