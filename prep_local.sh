@@ -17,7 +17,13 @@ mkdir $DIR_NAME
 cd $DIR_NAME
 
 # move the SraRunTable.txt file to the new dir
-mv ~/Downloads/SraRunTable.txt .
+# if the file SraTable.txt is in the Downloads directory copy it to the current directory. otherwise, move the file SraTable.csv to the current directory as SraRunTable.txt
+# in any case, it is assumed to be a csv file
+if [ -f ~/Downloads/SraRunTable.txt ]; then
+    mv ~/Downloads/SraRunTable.txt .
+else
+    mv ~/Downloads/SraRunTable.csv SraRunTable.txt
+fi
 
 # create a tsv mapping file
 cat SraRunTable.txt | tr "," "\\t" > map.txt
