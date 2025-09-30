@@ -280,8 +280,9 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	'''
 	if exp_type == '16s':
 		primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}
-		kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG'], 'v4missingT': ['ACGGA','ACGTA']}
-		# v4missingT are reads that start at position 2 (i.e. no T at position 1)
+		kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}
+		# kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG'], 'v4missingT': ['ACGG','ACGT']}
+		# # v4missingT are reads that start at position 2 (i.e. no T at position 1)
 		logging.info('16s experiment. will for the following regions: %s' % list(kmers.keys()))
 	elif exp_type == 'its':
 		primers = {'TTGTACACA': 'ITS1-30F', 'GAGGAAGTAA': 'ITS1F', 'GTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'ITSF/ITS5', 'GAACCTGCGG': 'ITS1', 'GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
