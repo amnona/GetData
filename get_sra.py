@@ -86,8 +86,8 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                                         if 'Bases' in cline:
                                             if int(cline['Bases']) > 500000000:
                                                 print("skipping sample %s since it seems not 16S")
-                                            num_skipped += 1
-                                            continue
+                                                num_skipped += 1
+                                                continue
                                 except ValueError:
                                     print("error parsing reads count for sample %s" % csamp)
 
