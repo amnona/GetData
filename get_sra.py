@@ -55,6 +55,7 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
         ifile = csv.DictReader(open(inputname, 'r'), delimiter=delimiter)
         num_files = 0
         num_skipped = 0
+        csamp = 'NA'
         for cline in ifile:
                 if 'Run_s' in cline:
                         csamp = cline['Run_s']
@@ -80,12 +81,12 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                                 try:
                                     if 'MBases' in cline:
                                         if int(cline['MBases']) > 500:
-                                                print("skipping sample %s since it seems not 16S")
+                                                print("skipping sample %s since it seems not 16S" % csamp)
                                                 num_skipped += 1
                                                 continue
                                         if 'Bases' in cline:
                                             if int(cline['Bases']) > 500000000:
-                                                print("skipping sample %s since it seems not 16S")
+                                                print("skipping sample %s since it seems not 16S" % csamp)
                                                 num_skipped += 1
                                                 continue
                                 except ValueError:
@@ -107,7 +108,7 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                 print(params)
                 subprocess.call(params)
                 print("got file %s" % csamp)
-        print('got %d files.' % num_files)
+        print('got %d files. skipped %d files.' % (num_files, num_skipped))
         return num_files
 
 
@@ -120,7 +121,7 @@ def main(argv):
         parser.add_argument('-q', '--fastq', help='if set, output fastq instead of fasta', action='store_true')
         parser.add_argument('-r', '--split-files', help='if set, split forward and reverse reads', action='store_true')
         args = parser.parse_args(argv)
-        GetSRA(args.input, args.path, args.skipifhere, fastq=args.fastq, split_files=args.split_files)
+        GetSRA(args.input, args.path, args.skipifhere, fastq=args.fastq, outdir=args.outdir, split_files=args.split_files)
 
 
 if __name__ == "__main__":
