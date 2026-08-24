@@ -50,12 +50,12 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                         xx = csv.Sniffer()
                         res = xx.sniff(csvfile.readline(), delimiters=',\t')
                         delimiter = res.delimiter
-                        print('Detected delimiter %s' % delimiter)
+                        print('Detected delimiter: "%s"' % delimiter)
 
         ifile = csv.DictReader(open(inputname, 'r'), delimiter=delimiter)
         num_files = 0
         num_skipped = 0
-        csamp = 'NA'
+        csamp = None
         for cline in ifile:
                 if 'Run_s' in cline:
                         csamp = cline['Run_s']
@@ -63,6 +63,9 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                         csamp = cline['Run']
                 elif 'acc' in cline:
                         csamp = cline['acc']
+                if csamp is None:
+                        print("could not find a column with the sample accession number. Please check the input file")
+                        return 0
                 num_files += 1
 
                 # test if the sample is 16s or shotgun

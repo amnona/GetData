@@ -8,7 +8,17 @@ import os
 import re
 from collections import defaultdict
 import subprocess
-import logging
+
+# try using loguru, and if not available, use logging
+try:
+	from loguru import logger
+except ImportError:
+	import logging
+	logging.basicConfig(
+        level=logger.debug,
+        format="%(asctime)s | %(levelname)s | %(message)s",
+    )
+	logger = logging.getLogger(__name__)
 
 try:
 	import numpy as np
@@ -26,7 +36,7 @@ def rev_comp_fasta(infile, outdir, reverse=True, complement=True):
 	if not os.path.exists(outdir):
 		os.makedirs(outdir)
 	outfile = os.path.join(outdir, os.path.basename(infile))
-	logging.debug('revcomp file %s into %s' % (infile, outfile))
+	logger.debug('revcomp file %s into %s' % (infile, outfile))
 	with open(outfile, 'w') as ofl:
 		for cseq, chead in iterfastaseqs(infile):
 			if complement:
@@ -48,7 +58,7 @@ def trim_fasta(infile, outdir, ltrim_len=1):
 	if not os.path.exists(outdir):
 		os.makedirs(outdir)
 	outfile = os.path.join(outdir, os.path.basename(infile))
-	logging.debug('ltrim file %s into %s len %d' % (infile, outfile, ltrim_len))
+	logger.debug('ltrim file %s into %s len %d' % (infile, outfile, ltrim_len))
 	with open(outfile, 'w') as ofl:
 		for cseq, chead in iterfastaseqs(infile):
 			ofl.write('>' + chead + '\n')
@@ -83,14 +93,14 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 		the name of the primer region identified
 	'''
 	# attach the base_dir if needed
-	logging.debug('Testing %d files for %d primers' % (len(files), len(primers)))
+	logger.debug('Testing %d files for %d primers' % (len(files), len(primers)))
 
 	if base_dir is not None:
 		files = [os.path.join(base_dir, x) for x in files]
 
 	# trim the primers if needed
 	if min_primer_len is not None:
-		logging.debug('Trimming primers before test to length %d' % min_primer_len)
+		logger.debug('Trimming primers before test to length %d' % min_primer_len)
 		new_primers = {}
 		for k, v in primers.items():
 			pos = len(k)
@@ -113,7 +123,7 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 				numchars += 1
 			new_primers[newp] = v
 		primers = new_primers
-		logging.debug('Trimmed primers are: %s' % primers)
+		logger.debug('Trimmed primers are: %s' % primers)
 
 	# scan the files
 	all_matches = defaultdict(float)
@@ -135,17 +145,17 @@ def test_fasta_file(files, base_dir=None, primers={'AGAGTTTGATC[AC]TGG[CT]TCAG':
 			if match_fraction > min_fraction:
 				all_matches[max_primer] += 1
 	if len(all_matches) > 0:
-		logging.debug('matches per primer: %s' % all_matches)
+		logger.debug('matches per primer: %s' % all_matches)
 		maxregion = max(all_matches, key=all_matches.get)
-		logging.debug('best matching region is %s' % maxregion)
+		logger.debug('best matching region is %s' % maxregion)
 		if all_matches[maxregion] / len(files) >= min_files_fraction:
-			logging.debug('enough matches found for primer %s: %s' % (maxregion, all_matches[maxregion]))
+			logger.debug('enough matches found for primer %s: %s' % (maxregion, all_matches[maxregion]))
 			return maxregion, primers[maxregion]
 		else:
-			logging.debug('not enough matches per primer. details: %s' % primers)
+			logger.debug('not enough matches per primer. details: %s' % primers)
 	else:
-		logging.debug('no matches found for any primer')
-	logging.info('No match for any of %d primers found' % len(primers))
+		logger.debug('no matches found for any primer')
+	logger.info('No match for any of %d primers found' % len(primers))
 	return None, None
 
 
@@ -216,9 +226,9 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 		raise ValueError('kmers must be of same length, but we get: %s' % kmers)
 	kmer_len = kmer_lens[0]
 
-	logging.debug('testing kmer head using %d heads for region on %d files:' % (len(kmers),len(files)))
+	logger.debug('testing kmer head using %d heads for region on %d files:' % (len(kmers),len(files)))
 	for cfile in files:
-		logging.debug(cfile)
+		logger.debug(cfile)
 		num_tested = 0
 		kmer_dist = defaultdict(float)
 		for cseq, chead in iterfastaseqs(cfile):
@@ -237,7 +247,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 			if kmer_dist[maxregion] > min_fraction:
 				file_primers[maxregion] += 1
 	if len(file_primers) == 0:
-		logging.info('no exact regions identified in files')
+		logger.info('no exact regions identified in files')
 		return None
 	maxregion = max(file_primers, key=file_primers.get)
 	if file_primers[maxregion] / len(files) > min_files_fraction:
@@ -286,12 +296,12 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}
 		# kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG'], 'v4missingT': ['ACGG','ACGT']}
 		# # v4missingT are reads that start at position 2 (i.e. no T at position 1)
-		logging.info('16s experiment. will for the following regions: %s' % list(kmers.keys()))
+		logger.info('16s experiment. will for the following regions: %s' % list(kmers.keys()))
 	elif exp_type == 'its':
 		primers = {'TTGTACACA': 'ITS1-30F', 'GAGGAAGTAA': 'ITS1F', 'GTAACAAGG[ACGT][ACGT][ACGT][ACGT]': 'ITSF/ITS5', 'GAACCTGCGG': 'ITS1', 'GA[AG]GGATCA': 'BITS1', 'AAGAACGCAGC': 'ITS3', 'C[AG]A[AG]T[CT]TTTG[ACGT][ACGT]' : 'ITS86F', 'TTGAGCGTC': 'FSEQ'}
 		kmers={'ITS1-30F': ['XXXXX'], 'ITS1F': ['AAGTC'], 'ITSF/ITS5': ['CGTAG','CGTTG'], 'ITS1': ['AAGGA'],  'BITS1': ['XXXXX'], 'ITS3': ['GAAAT'], 'ITS86F': ['CGCAC'], 'FSEQ': ['XXXXX']}
 		min_primer_len = 15
-		logging.info('ITS experiment. will for the following regions: %s' % kmers.keys())
+		logger.info('ITS experiment. will for the following regions: %s' % kmers.keys())
 	else:
 		raise ValueError('unknown experiment type %s (use "16s" or "its")' % exp_type)
 
@@ -303,19 +313,19 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 
 	# get all the fasta files
 	if not skip_get:
-		logging.info('processing sratable %s' % infile)
+		logger.info('processing sratable %s' % infile)
 		num_files = get_sra.GetSRA(infile, sra_path, skipifthere=True, outdir=reads_dir, skip_16s_check=skip_16s_check,fastq=fastq)
-		logging.info('downloaded %d files' % num_files)
+		logger.info('downloaded %d files' % num_files)
 	else:
-		logging.info('skipping getting files from sra')
+		logger.info('skipping getting files from sra')
 
 	# check if known region / if we need to trim primer
 	files = [f for f in os.listdir(reads_dir) if f.endswith('.fasta') or f.endswith('fastq')]
 	print('found %d files' % len(files))
-	logging.debug('found %d files' % len(files))
+	logger.debug('found %d files' % len(files))
 	found_it = False
 	if not skip_region:
-		logging.info('** testing region')
+		logger.info('** testing region')
 		if len(files) == 0:
 			raise ValueError('no fasta files found in %s' % reads_dir)
 		if len(files) > max_test:
@@ -327,47 +337,47 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 			test_files = [files[x] for x in random_indices]
 		else:
 			test_files = files
-		logging.info('testing in representative set of %d files' % len(test_files))
+		logger.info('testing in representative set of %d files' % len(test_files))
 
 		if not skip_exact:
-			logging.info('testing exact region match')
+			logger.info('testing exact region match')
 			# test if the sequences are of some known region
 			region = test_kmer_head_region(test_files, reads_dir, kmers=kmers)
 		else:
 			region = None
 		if region is not None:
-			logging.info('region is %s with exact match. No primer trimming needed' % region)
+			logger.info('region is %s with exact match. No primer trimming needed' % region)
 			found_it = True
 		else:
-			logging.info('no exact region match')
+			logger.info('no exact region match')
 			# test if sequences contain known primer
-			logging.info('testing primer match within %d first bases' % max_primer_start)
+			logger.info('testing primer match within %d first bases' % max_primer_start)
 			match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start, primers=primers, min_primer_len=min_primer_len)
 
 			# no match for primer - let's try reverse-complement
 			if match_primer is None:
-				logging.info('no match for primer.')
-				logging.info('trying reverse complement')
+				logger.info('no match for primer.')
+				logger.info('trying reverse complement')
 				rc_dir = 'revcomp'
 				for cfile in files:
 					rev_comp_fasta(os.path.join(reads_dir, cfile), rc_dir)
 				reads_dir = rc_dir
-				logging.info('testing exact region match or reverse complement')
+				logger.info('testing exact region match or reverse complement')
 				region = test_kmer_head_region(test_files, reads_dir, kmers=kmers)
 				if region is not None:
-					logging.info('Found exact region %s after reverse complement')
+					logger.info('Found exact region %s after reverse complement')
 					found_it = True
 				else:
-					logging.info('testing primer match within %d first bases for reverse complement' % max_primer_start)
+					logger.info('testing primer match within %d first bases for reverse complement' % max_primer_start)
 					# test if sequences contain known primer
 					match_primer, match_primer_name = test_fasta_file(test_files, reads_dir, max_start=max_primer_start, primers=primers, min_primer_len=min_primer_len)
 					# if still not found, maybe need to skip first 1-5 bases (short forward primer....)
 					if match_primer is None:
-						logging.info('no match for primer. trying short left trimming and region match')
+						logger.info('no match for primer. trying short left trimming and region match')
 						for ctrim in range(5):
 							region = test_kmer_head_region(test_files, reads_dir, ltrim=ctrim + 1, kmers=kmers)
 							if region is not None:
-								logging.info('Found match after short left trimming. Need %d left trimming. region is %s' % (ctrim, region))
+								logger.info('Found match after short left trimming. Need %d left trimming. region is %s' % (ctrim, region))
 								trimdir = 'trimmed'
 								for cfile in files:
 									trim_fasta(cfile, trimdir, ltrim_len=ctrim)
@@ -376,24 +386,24 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 
 			# if found matching primer in sequences, trim it
 			if match_primer is not None:
-				logging.info('trimming with primer %s for region %s' % (match_primer, match_primer_name))
+				logger.info('trimming with primer %s for region %s' % (match_primer, match_primer_name))
 				trim_dir = 'trim'
 				get_region.get_region(reads_dir, outputname=trim_dir, fprimer=match_primer, skip_reverse=True)
 				reads_dir = trim_dir
-				logging.info('finished trimming')
+				logger.info('finished trimming')
 				found_it = True
 			# after all these tries didn't identify reads as coming from any known region
 			if not found_it:
-				logging.error('**** no match for any primer or region. please checj manually ****')
+				logger.error('**** no match for any primer or region. please checj manually ****')
 				raise ValueError('No matching regions/primers. please check manually!')
 
 	# check the length of typical reads
 	read_len = test_read_length(files, reads_dir)
-	logging.info('typical read length = %d' % read_len)
+	logger.info('typical read length = %d' % read_len)
 	if read_len < 100:
 		raise ValueError('Read length %d too short' % read_len)
 	read_len = min(read_len, seq_len)
-	logging.info('deblurring')
+	logger.info('deblurring')
 	# deblur workflow --seqs-fp fasta --output-dir deblur -w -t 150 -O 32 --min-reads 10 --pos-ref-db-fp /home/amam7564/data/icu/deblur/deblur_working_dir/88_otus --neg-ref-db-fp /home/amam7564/data/icu/deblur/deblur_working_dir/artifacts
 	params = []
 	# params += ['qsub', '-d', '$PWD', '-V', '-m', 'abe', '-M', 'amnonimjobs@gmail.com', '-j', 'eo', '-e', 'process.err', '-l', 'walltime=48:00:00,nodes=1:ppn=32,mem=250gb', '-N', 'process']
@@ -406,7 +416,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		params += ['--pos-ref-db-fp', os.path.join(deblur_path, '88_otus')]
 		params += ['--pos-ref-db-fp', os.path.join(deblur_path, 'artifacts')]
 	subprocess.call(params)
-	logging.info('done')
+	logger.info('done')
 
 
 def main(argv=None):
@@ -433,7 +443,7 @@ def main(argv=None):
 
 	print('logging to %s' % args.log_file)
 	logging.basicConfig(filename=args.log_file, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', level=args.log_level, datefmt='%d/%m/%Y %H:%M:%S')
-	logging.info('process_experiment started')
+	logger.info('process_experiment started')
 	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq, exp_type=args.exp_type)
 	return 0
 
