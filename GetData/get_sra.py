@@ -65,15 +65,15 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
         ifile = csv.DictReader(open(inputname, 'r'), delimiter=delimiter)
         num_files = 0
         num_skipped = 0
-        csamp = None
         for cline in ifile:
+                logger.debug(cline)
                 if 'Run_s' in cline:
                         csamp = cline['Run_s']
                 elif 'Run' in cline:
                         csamp = cline['Run']
                 elif 'acc' in cline:
                         csamp = cline['acc']
-                if csamp is None:
+                else:
                         logger.error("could not find a column with the sample accession number. Please check the input file")
                         return 0
                 num_files += 1
