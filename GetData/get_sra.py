@@ -15,6 +15,16 @@ import os.path
 import csv
 import subprocess
 
+try:
+        from loguru import logger
+except ImportError:
+	import logging
+	logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s | %(levelname)s | %(message)s",
+    )
+	logger = logging.getLogger(__name__)
+
 __version__ = "1.2"
 
 
@@ -50,7 +60,7 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                         xx = csv.Sniffer()
                         res = xx.sniff(csvfile.readline(), delimiters=',\t')
                         delimiter = res.delimiter
-                        print('Detected delimiter: "%s"' % delimiter)
+                        logger.info('Detected delimiter: "%s"' % delimiter)
 
         ifile = csv.DictReader(open(inputname, 'r'), delimiter=delimiter)
         num_files = 0
@@ -64,7 +74,7 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                 elif 'acc' in cline:
                         csamp = cline['acc']
                 if csamp is None:
-                        print("could not find a column with the sample accession number. Please check the input file")
+                        logger.error("could not find a column with the sample accession number. Please check the input file")
                         return 0
                 num_files += 1
 
@@ -84,23 +94,23 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                                 try:
                                     if 'MBases' in cline:
                                         if int(cline['MBases']) > 500:
-                                                print("skipping sample %s since it seems not 16S" % csamp)
+                                                logger.info("skipping sample %s since it seems not 16S" % csamp)
                                                 num_skipped += 1
                                                 continue
                                         if 'Bases' in cline:
                                             if int(cline['Bases']) > 500000000:
-                                                print("skipping sample %s since it seems not 16S" % csamp)
+                                                logger.info("skipping sample %s since it seems not 16S" % csamp)
                                                 num_skipped += 1
                                                 continue
                                 except ValueError:
-                                    print("error parsing reads count for sample %s" % csamp)
+                                    logger.error("error parsing reads count for sample %s" % csamp)
 
                 if skipifthere:
                         if os.path.isfile(os.path.join(outdir, csamp) + '.fasta'):
-                                print("skipping sample %s. file exists" % csamp)
+                                logger.info("skipping sample %s. file exists" % csamp)
                                 continue
 
-                print("getting file %s" % csamp)
+                logger.info("getting file %s" % csamp)
                 params = [os.path.join(path, 'fastq-dump'), '--disable-multithreading']
                 params += ['--outdir', outdir]
                 if split_files:
@@ -108,10 +118,10 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                 if not fastq:
                         params += ['--fasta', '0']
                 params += [csamp]
-                print(params)
+                logger.debug(params)
                 subprocess.call(params)
-                print("got file %s" % csamp)
-        print('got %d files. skipped %d files.' % (num_files, num_skipped))
+                logger.info("got file %s" % csamp)
+        logger.info('got %d files. skipped %d files.' % (num_files, num_skipped))
         return num_files
 
 
