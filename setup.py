@@ -29,12 +29,10 @@ setup(
     maintainer='Amnon',
     maintainer_email='jamietmorton@gmail.com',
     packages=['GetData'],
-    py_modules=['process_experiment'],
-    scripts=['process_experiment.py'],
     install_requires=['numpy'],
     entry_points={
         'console_scripts': [
-            'process-experiment=process_experiment:cli',
+            'process-experiment=GetData.process_experiment:cli',
         ],
     },
     classifiers=classifiers,
