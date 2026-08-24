@@ -187,7 +187,7 @@ def test_read_length(files, base_dir=None, num_reads=1000, prctile=75):
 			num_tested += 1
 			if num_tested > num_reads:
 				break
-	return int(_percentile(all_reads, prctile))
+	return int(np.percentile(all_reads, prctile))
 
 
 def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG'], 'ITS5': ['TTTC','TCTC']}, num_reads=1000, min_fraction=0.5, min_files_fraction=0.1, ltrim=0):
