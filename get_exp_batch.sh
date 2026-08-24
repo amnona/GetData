@@ -3,7 +3,10 @@
 
 # parameters - all parameters are passed to process_experiment.py
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 echo "starting process_experiment"
 echo "parameters: $@"
-~/git/GetData/process_experiment.py -i SraRunTable.txt --deblur-path /RG/compbio/groupData/databases/deblur -p ~/bin/sratoolkit.3.0.0-centos_linux64/bin/ $@
+python3 -m GetData.process_experiment -i SraRunTable.txt --deblur-path /RG/compbio/groupData/databases/deblur -p ~/bin/sratoolkit.3.0.0-centos_linux64/bin/ "$@"
 echo "finished"

@@ -401,7 +401,10 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	logging.info('done')
 
 
-def main(argv):
+def main(argv=None):
+	if argv is None:
+		argv = sys.argv[1:]
+
 	parser = argparse.ArgumentParser(description='Process experiment version ' + __version__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 	parser.add_argument('-i', '--input', help='name of input SraRunTable file (with the sample accessions')
 	parser.add_argument('-p', '--sra-path', help='path to the sratoolkit binary', default='/home/amam7564/bin/sratoolkit.3.0.0-centos_linux64/bin/')
@@ -424,7 +427,12 @@ def main(argv):
 	logging.basicConfig(filename=args.log_file, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', level=args.log_level, datefmt='%d/%m/%Y %H:%M:%S')
 	logging.info('process_experiment started')
 	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq, exp_type=args.exp_type)
+	return 0
+
+
+def cli():
+	return main()
 
 
 if __name__ == "__main__":
-	main(sys.argv[1:])
+	sys.exit(main())
