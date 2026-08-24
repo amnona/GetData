@@ -73,6 +73,8 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
                         csamp = cline['Run']
                 elif 'acc' in cline:
                         csamp = cline['acc']
+                elif 'run_accession' in cline:
+                        csamp = cline['run_accession']
                 else:
                         logger.error("could not find a column with the sample accession number. Please check the input file")
                         return 0
