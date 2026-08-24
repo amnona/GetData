@@ -20,7 +20,7 @@ description = 'Downloading 16S data from SRA using Deblur'
 
 setup(
     name='GetData',
-    version='0.0.1',
+    version='0.1.0',
     description=description,
     long_description=description,
     long_description_content_type='text/markdown',
