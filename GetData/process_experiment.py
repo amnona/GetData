@@ -330,7 +330,12 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		the length of the primers to keep (default 10)
 	output_dir: str or None, optional
 		the output directory for the deblur results. If None, use current working directory
+	
+	Returns
+	-------
+	str: the primer region identified for the experiment (or None if not identified). One of: 'v3','v4','v1'
 	'''
+	identified_primer = None
 	if exp_type == '16s':
 		primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}
 		kmers={'v4': ['TACG'], 'v3': ['TGGG', 'TGAG'], 'v1': ['GACG', 'GATG', 'ATTG']}
@@ -394,6 +399,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 			region = None
 		if region is not None:
 			logger.info('region is %s with exact match. No primer trimming needed' % region)
+			identified_primer = region
 			found_it = True
 		else:
 			logger.info('no exact region match')
@@ -412,7 +418,8 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 				logger.info('testing exact region match or reverse complement')
 				region = test_kmer_head_region(test_files, reads_dir, kmers=kmers)
 				if region is not None:
-					logger.info('Found exact region %s after reverse complement')
+					logger.info('Found exact region %s after reverse complement' % region)
+					identified_primer = region
 					found_it = True
 				else:
 					logger.info('testing primer match within %d first bases for reverse complement' % max_primer_start)
@@ -425,6 +432,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 							region = test_kmer_head_region(test_files, reads_dir, ltrim=ctrim + 1, kmers=kmers)
 							if region is not None:
 								logger.info('Found match after short left trimming. Need %d left trimming. region is %s' % (ctrim, region))
+								identified_primer = region
 								trimdir = 'trimmed'
 								for cfile in files:
 									trim_fasta(cfile, trimdir, ltrim_len=ctrim)
@@ -464,6 +472,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		params += ['--neg-ref-db-fp', os.path.join(deblur_path, 'artifacts')]
 	subprocess.call(params)
 	logger.info('done')
+	return identified_primer
 
 
 def main(argv=None):
