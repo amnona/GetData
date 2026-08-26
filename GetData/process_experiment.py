@@ -8,22 +8,9 @@ import os
 import re
 from collections import defaultdict
 import subprocess
+import logging
 
-# try using loguru, and if not available, use logging
-try:
-	from loguru import logger
-except ImportError:
-	import logging
-	logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s | %(levelname)s | %(message)s",
-    )
-	logger = logging.getLogger(__name__)
-
-try:
-	import numpy as np
-except ImportError:  # pragma: no cover - exercised in minimal environments
-	np = None
+import numpy as np
 
 from . import get_sra
 from . import get_region
@@ -31,6 +18,57 @@ from .utils import iterfastaseqs
 
 __version__ = "0.1"
 
+# try using loguru, and if not available, use logging
+try:
+	from loguru import logger
+except ImportError:
+	logging.basicConfig(
+		level=logging.DEBUG,
+		format="%(asctime)s | %(levelname)s | %(message)s",
+	)
+	logger = logging.getLogger(__name__)
+
+
+def configure_logging(log_file=None, log_level=20):
+	"""Configure logging for either loguru or the standard-library fallback logger."""
+	if hasattr(logger, 'remove') and hasattr(logger, 'add'):
+		logger.remove()
+		if log_file:
+			logger.add(
+				log_file,
+				level=_loguru_level(log_level),
+				format='{time:%d/%m/%Y %H:%M:%S} | {level} | {message}',
+			)
+		else:
+			logger.add(
+				sys.stderr,
+				level=_loguru_level(log_level),
+				format='{time:%d/%m/%Y %H:%M:%S} | {level} | {message}',
+			)
+		return logger
+
+	if isinstance(logger, logging.Logger):
+		logging.basicConfig(
+			filename=log_file,
+			filemode='w',
+			format='%(asctime)s:%(levelname)s:%(message)s',
+			level=log_level,
+			datefmt='%d/%m/%Y %H:%M:%S',
+		)
+		return logger
+	return None
+
+
+def _loguru_level(log_level):
+	if log_level <= 10:
+		return 'DEBUG'
+	if log_level <= 20:
+		return 'INFO'
+	if log_level <= 30:
+		return 'WARNING'
+	if log_level <= 40:
+		return 'ERROR'
+	return 'CRITICAL'
 
 def rev_comp_fasta(infile, outdir, reverse=True, complement=True):
 	if not os.path.exists(outdir):
@@ -255,7 +293,7 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 	return None
 
 
-def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False, fastq=False, exp_type='16s', min_primer_len=10):
+def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False, fastq=False, exp_type='16s', min_primer_len=10, output_dir=None):
 	'''download the Sra table, convert to known region, and deblur
 
 	Parameters
@@ -290,6 +328,8 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		the type of experiment ("16s" or "its")
 	min_primer_len: int, optional
 		the length of the primers to keep (default 10)
+	output_dir: str or None, optional
+		the output directory for the deblur results. If None, use current working directory
 	'''
 	if exp_type == '16s':
 		primers={'AGAGTTTGATC[AC]TGG[CT]TCAG': 'v1', 'CCTACGGG[ACGT][CGT]GC[AT][CG]CAG': 'v3', 'GTGCCAGC[AC]GCCGCGGTAA': 'v4'}
@@ -305,11 +345,17 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	else:
 		raise ValueError('unknown experiment type %s (use "16s" or "its")' % exp_type)
 
+	if output_dir is not None:
+		if not os.path.exists(output_dir):
+			os.makedirs(output_dir)
+	else:
+		output_dir = os.getcwd()
+
 	if reads_dir is None:
 		if fastq:
-			reads_dir = 'fastq'
+			reads_dir = os.path.join(output_dir, 'fastq')
 		else:
-			reads_dir = 'fasta'
+			reads_dir = os.path.join(output_dir, 'fasta')
 
 	# get all the fasta files
 	if not skip_get:
@@ -321,7 +367,6 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 
 	# check if known region / if we need to trim primer
 	files = [f for f in os.listdir(reads_dir) if f.endswith('.fasta') or f.endswith('fastq')]
-	print('found %d files' % len(files))
 	logger.debug('found %d files' % len(files))
 	found_it = False
 	if not skip_region:
@@ -387,7 +432,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 			# if found matching primer in sequences, trim it
 			if match_primer is not None:
 				logger.info('trimming with primer %s for region %s' % (match_primer, match_primer_name))
-				trim_dir = 'trim'
+				trim_dir = os.path.join(output_dir, 'trim')
 				get_region.get_region(reads_dir, outputname=trim_dir, fprimer=match_primer, skip_reverse=True)
 				reads_dir = trim_dir
 				logger.info('finished trimming')
@@ -409,12 +454,12 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	# params += ['qsub', '-d', '$PWD', '-V', '-m', 'abe', '-M', 'amnonimjobs@gmail.com', '-j', 'eo', '-e', 'process.err', '-l', 'walltime=48:00:00,nodes=1:ppn=32,mem=250gb', '-N', 'process']
 	params += ['deblur', 'workflow']
 	params += ['--seqs-fp', reads_dir]
-	params += ['--output-dir', 'deblur']
+	params += ['--output-dir', os.path.join(output_dir, 'deblur')]
 	params += ['-w', '-t', str(read_len)]
 	params += ['-O', str(num_threads), '--min-reads', '10']
 	if deblur_path is not None:
 		params += ['--pos-ref-db-fp', os.path.join(deblur_path, '88_otus')]
-		params += ['--pos-ref-db-fp', os.path.join(deblur_path, 'artifacts')]
+		params += ['--neg-ref-db-fp', os.path.join(deblur_path, 'artifacts')]
 	subprocess.call(params)
 	logger.info('done')
 
@@ -438,13 +483,14 @@ def main(argv=None):
 	parser.add_argument('--deblur-path', help='location of deblur pre-compiled artifacts/rep seqs')
 	parser.add_argument('--num-threads', help='number of threads to run for deblur', default=1)
 	parser.add_argument('--exp-type', help='type of experiment (16s or its)', default='16s')
+	parser.add_argument('--output-dir', help='output directory for the deblur results', default=None)
 
 	args = parser.parse_args(argv)
 
 	print('logging to %s' % args.log_file)
-	logging.basicConfig(filename=args.log_file, filemode='w', format='%(asctime)s:%(levelname)s:%(message)s', level=args.log_level, datefmt='%d/%m/%Y %H:%M:%S')
+	configure_logging(log_file=args.log_file, log_level=args.log_level)
 	logger.info('process_experiment started')
-	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq, exp_type=args.exp_type)
+	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq, exp_type=args.exp_type, output_dir=args.output_dir)
 	return 0
 
 

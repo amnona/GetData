@@ -66,7 +66,6 @@ def GetSRA(inputname, path, skipifthere=False, fastq=False, delimiter=None, outd
         num_files = 0
         num_skipped = 0
         for cline in ifile:
-                logger.debug(cline)
                 if 'Run_s' in cline:
                         csamp = cline['Run_s']
                 elif 'Run' in cline:
