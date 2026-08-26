@@ -441,6 +441,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 
 			# if found matching primer in sequences, trim it
 			if match_primer is not None:
+				identified_primer = match_primer_name
 				logger.info('trimming with primer %s for region %s' % (match_primer, match_primer_name))
 				trim_dir = os.path.join(output_dir, 'trim')
 				get_region.get_region(reads_dir, outputname=trim_dir, fprimer=match_primer, skip_reverse=True)
