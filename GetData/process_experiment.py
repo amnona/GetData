@@ -351,6 +351,8 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	else:
 		output_dir = os.getcwd()
 
+	logger.info('output directory for process_experiment: %s' % output_dir)
+
 	if reads_dir is None:
 		if fastq:
 			reads_dir = os.path.join(output_dir, 'fastq')
