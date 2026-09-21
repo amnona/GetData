@@ -3,6 +3,7 @@
 # amnonscript
 
 import argparse
+import shutil
 import sys
 import os
 import re
@@ -293,7 +294,23 @@ def test_kmer_head_region(files, base_dir=None, kmers={'v4': ['TACG'], 'v3': ['T
 	return None
 
 
-def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False, fastq=False, exp_type='16s', min_primer_len=10, output_dir=None):
+def cleanup_intermediate_files(files):
+	'''Remove intermediate files and directories.
+
+	Parameters
+	----------
+	files: list of str
+		List of file or directory paths to remove.
+	'''
+	logger.debug('cleaning up intermediate files: %s' % files)
+	for f in files:
+		if os.path.exists(f):
+			if os.path.isdir(f):
+				shutil.rmtree(f)
+			else:
+				os.remove(f)
+
+def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=False, seq_len=150, skip_16s_check=False, skip_region=False, deblur_path=None, num_threads=1, max_primer_start=25, skip_exact=False, fastq=False, exp_type='16s', min_primer_len=10, output_dir=None, clear_upon_fail=False):
 	'''download the Sra table, convert to known region, and deblur
 
 	Parameters
@@ -330,6 +347,8 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		the length of the primers to keep (default 10)
 	output_dir: str or None, optional
 		the output directory for the deblur results. If None, use current working directory
+	clear_upon_fail: bool, optional
+		if True, clear intermediate files upon failure (default False)
 	
 	Returns
 	-------
@@ -364,11 +383,13 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		else:
 			reads_dir = os.path.join(output_dir, 'fasta')
 
+	cleanup_files = []
 	# get all the fasta files
 	if not skip_get:
 		logger.info('processing sratable %s' % infile)
 		num_files = get_sra.GetSRA(infile, sra_path, skipifthere=True, outdir=reads_dir, skip_16s_check=skip_16s_check,fastq=fastq)
 		logger.info('downloaded %d files' % num_files)
+		cleanup_files.append(reads_dir)
 	else:
 		logger.info('skipping getting files from sra')
 
@@ -379,6 +400,8 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 	if not skip_region:
 		logger.info('** testing region')
 		if len(files) == 0:
+			if clear_upon_fail:
+				cleanup_intermediate_files(cleanup_files)
 			raise ValueError('no fasta files found in %s' % reads_dir)
 		if len(files) > max_test:
 			if np is not None:
@@ -414,6 +437,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 				rc_dir = 'revcomp'
 				for cfile in files:
 					rev_comp_fasta(os.path.join(reads_dir, cfile), rc_dir)
+				cleanup_files.append(rc_dir)
 				reads_dir = rc_dir
 				logger.info('testing exact region match or reverse complement')
 				region = test_kmer_head_region(test_files, reads_dir, kmers=kmers)
@@ -436,6 +460,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 								trimdir = 'trimmed'
 								for cfile in files:
 									trim_fasta(cfile, trimdir, ltrim_len=ctrim)
+								cleanup_files.append(trimdir)
 								reads_dir = trimdir
 								found_it = True
 
@@ -445,18 +470,24 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 				logger.info('trimming with primer %s for region %s' % (match_primer, match_primer_name))
 				trim_dir = os.path.join(output_dir, 'trim')
 				get_region.get_region(reads_dir, outputname=trim_dir, fprimer=match_primer, skip_reverse=True)
+				cleanup_files.append(trim_dir)
 				reads_dir = trim_dir
 				logger.info('finished trimming')
 				found_it = True
+
 			# after all these tries didn't identify reads as coming from any known region
 			if not found_it:
 				logger.error('**** no match for any primer or region. please checj manually ****')
+				if clear_upon_fail:
+					cleanup_intermediate_files(cleanup_files)
 				raise ValueError('No matching regions/primers. please check manually!')
 
 	# check the length of typical reads
 	read_len = test_read_length(files, reads_dir)
 	logger.info('typical read length = %d' % read_len)
 	if read_len < 100:
+		if clear_upon_fail:
+			cleanup_intermediate_files(cleanup_files)
 		raise ValueError('Read length %d too short' % read_len)
 	read_len = min(read_len, seq_len)
 	logger.info('deblurring')
@@ -472,6 +503,7 @@ def process_experiment(infile, sra_path, reads_dir=None, max_test=10, skip_get=F
 		params += ['--pos-ref-db-fp', os.path.join(deblur_path, '88_otus')]
 		params += ['--neg-ref-db-fp', os.path.join(deblur_path, 'artifacts')]
 	subprocess.call(params)
+	cleanup_intermediate_files(cleanup_files)
 	logger.info('done')
 	return identified_primer
 
@@ -496,13 +528,14 @@ def main(argv=None):
 	parser.add_argument('--num-threads', help='number of threads to run for deblur', default=1)
 	parser.add_argument('--exp-type', help='type of experiment (16s or its)', default='16s')
 	parser.add_argument('--output-dir', help='output directory for the deblur results', default=None)
+	parser.add_argument('--clear_upon_fail', help='if set, clear intermediate files upon failure', action='store_true', default=False)
 
 	args = parser.parse_args(argv)
 
 	print('logging to %s' % args.log_file)
 	configure_logging(log_file=args.log_file, log_level=args.log_level)
 	logger.info('process_experiment started')
-	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq, exp_type=args.exp_type, output_dir=args.output_dir)
+	process_experiment(infile=args.input, sra_path=args.sra_path, skip_get=args.skip_get, seq_len=args.trim_length, skip_16s_check=args.skip_16s_check, skip_region=args.skip_region, deblur_path=args.deblur_path, num_threads=args.num_threads, max_primer_start=args.max_primer_start, skip_exact=args.skip_exact, fastq=args.fastq, exp_type=args.exp_type, output_dir=args.output_dir, clear_upon_fail=args.clear_upon_fail)
 	return 0
 
 
