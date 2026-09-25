@@ -20,7 +20,7 @@ description = 'Downloading 16S data from SRA using Deblur'
 
 setup(
     name='GetData',
-    version='2026.09.21',
+    version='2026.09.25',
     description=description,
     long_description=description,
     long_description_content_type='text/markdown',
@@ -29,7 +29,7 @@ setup(
     maintainer='Amnon',
     maintainer_email='jamietmorton@gmail.com',
     packages=['GetData'],
-    install_requires=['numpy'],
+    install_requires=['numpy', 'loguru'],
     entry_points={
         'console_scripts': [
             'process-experiment=GetData.process_experiment:cli',

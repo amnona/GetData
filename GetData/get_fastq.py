@@ -11,7 +11,7 @@ try:
 except ImportError:
 	import logging
 	logging.basicConfig(
-        level=logger.debug,
+		level=logging.DEBUG,
         format="%(asctime)s | %(levelname)s | %(message)s",
     )
 	logger = logging.getLogger(__name__)
