@@ -12,8 +12,8 @@ except ImportError:
 	import logging
 	logging.basicConfig(
 		level=logging.DEBUG,
-        format="%(asctime)s | %(levelname)s | %(message)s",
-    )
+		format="%(asctime)s | %(levelname)s | %(message)s",
+	)
 	logger = logging.getLogger(__name__)
 
 from . import get_sra

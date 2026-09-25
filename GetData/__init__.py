@@ -8,10 +8,10 @@ from . import count_kmer
 from . import utils
 
 __all__ = [
-    'process_experiment',
-    'get_sra',
-    'get_region',
-    'get_fastq',
-    'count_kmer',
-    'utils',
+	'process_experiment',
+	'get_sra',
+	'get_region',
+	'get_fastq',
+	'count_kmer',
+	'utils',
 ]
